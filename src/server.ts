@@ -4,14 +4,15 @@ import * as logger from "morgan";
 import * as compression from "compression";
 import * as errorHandler from "errorhandler";
 import * as dotenv from "dotenv";
+import * as routes from "./routing";
+
 //Database connexion
 import { connection } from "./helper/mongoConnexion";
-const checkConnexion = connection;
-
 /**
  * Load environment variables from .env file, where API keys and passwords are configured.
  */
 dotenv.config({ path: ".env.dev" });
+const checkConnexion = connection;
 
 const app = express();
 
@@ -65,7 +66,7 @@ if (app.get("env") === "development") {
 }
 
 //Routing handling
-// app.use("/api", require("./routing"));
+app.use("/api", routes);
 
 //Will create the database
 
