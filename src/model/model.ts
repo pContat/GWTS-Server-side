@@ -7,12 +7,21 @@ class MongooseModel {
     this.model = schema;
   }
 
-  public get(objectId: mongoose.Types.ObjectId) {
-    return this.model.findOne({ item_id: objectId });
+  public getById(objectId: mongoose.Types.ObjectId) {
+    return this.model.findById(objectId).then((doc: any) => {
+      if (!doc) {
+        return Promise.reject({
+          code: 404,
+          message: `${objectId} doesn't exists`
+        });
+      } else {
+        return Promise.resolve(doc);
+      }
+    });
   }
 
-  delete(objectId: mongoose.Types.ObjectId) {
-    return this.model.remove({ _id: objectId });
+  delete(objectId: mongoose.Types.ObjectId): mongoose.DocumentQuery<any, any> {
+    return this.model.findOneAndRemove({ _id: objectId });
   }
 
   gets(objectIds: Array<mongoose.Types.ObjectId>) {

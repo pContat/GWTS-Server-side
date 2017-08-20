@@ -1,7 +1,7 @@
-import { default as Item, ItemType } from "./schema/item";
-import { MongooseModel } from "./model";
+import { default as Item, ItemType } from "./itemSchema";
+import { MongooseModel } from "../model";
 
-class ItemModel extends MongooseModel {
+export class ItemModel extends MongooseModel {
   constructor() {
     super(Item);
   }
@@ -31,5 +31,3 @@ class ItemModel extends MongooseModel {
   //     });
   // }
 }
-
-module.exports = ItemModel;

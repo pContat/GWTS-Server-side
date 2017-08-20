@@ -2,9 +2,9 @@ import * as request from "request-promise-native";
 import { default as conf } from "../config";
 
 class GWUri {
-  static readonly baseURL = "https://api.guildwars2.com/v2/";
-  static readonly receipes = `${GWUri.baseURL}/recipes`;
-  static readonly receipeSearch = `${GWUri.baseURL}/recipes/search?output=`;
+  static readonly baseURL = "https://api.guildwars2.com/v2";
+  static readonly recipes = `${GWUri.baseURL}/recipes`;
+  static readonly recipeSearch = `${GWUri.baseURL}/recipes/search?output=`;
   static readonly items = `${GWUri.baseURL}/items`;
   static readonly listings = `${GWUri.baseURL}/listings`;
   static readonly prices = `${GWUri.baseURL}/prices`;
@@ -24,11 +24,11 @@ export class GWHttpHelper {
   }
 
   static recipeDetail(recipeId: string) {
-    return this.get(GWUri.receipes + "/" + recipeId);
+    return this.get(GWUri.recipes + "/" + recipeId);
   }
 
   static allRecipe() {
-    return this.get(GWUri.receipes);
+    return this.get(GWUri.recipes);
   }
 
   //Get detail of item_id
@@ -47,7 +47,7 @@ export class GWHttpHelper {
 
   //Search for recipe that create 'item_id''
   static recipeFor(itemId: string) {
-    var uri = `${GWUri.receipeSearch}${itemId}`;
+    var uri = `${GWUri.recipeSearch}${itemId}`;
     return this.get(uri).then(
       (body: any) =>
         body.length > 0 ? Promise.resolve(body[0]) : Promise.reject("not found")
