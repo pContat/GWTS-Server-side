@@ -6,7 +6,7 @@ Contain multiple global config for the project
 */
 export default {
   db: {
-    mongo: "mongodb://localhost/GWTS"
+    mongo: "mongodb://localhost:27017/GWTS"
   },
 
   //Path are the combination between 'pathToFile' and path from the database

@@ -27,7 +27,7 @@ export class GWHttpHelper {
     return this.get(GWUri.recipes + "/" + recipeId);
   }
 
-  static allRecipe() {
+  static recipes() {
     return this.get(GWUri.recipes);
   }
 
@@ -36,13 +36,17 @@ export class GWHttpHelper {
     return this.get(GWUri.items + "/" + itemId);
   }
 
+  static items() {
+    return this.get(GWUri.items);
+  }
+
   //Return information of multiple item
   static itemsDetail(itemsIds: string[]) {
     let ids = "?ids=" + itemsIds[0];
     for (let i = 1; i < itemsIds.length; i++) {
       ids += "," + itemsIds[i];
     }
-    return this.get(GWUri.items + "/" + ids);
+    return this.get(GWUri.items + ids);
   }
 
   //Search for recipe that create 'item_id''

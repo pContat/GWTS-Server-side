@@ -2,9 +2,15 @@ import * as mongoose from "mongoose";
 
 class MongooseModel {
   protected model: mongoose.Model<mongoose.Document>;
+  protected insertedDoc: Map<string, object>;
 
   constructor(schema: mongoose.Model<mongoose.Document>) {
     this.model = schema;
+    this.insertedDoc = new Map<string, object>();
+  }
+
+  public getModel() {
+    return this.model;
   }
 
   public getById(objectId: mongoose.Types.ObjectId) {

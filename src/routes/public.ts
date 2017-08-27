@@ -13,7 +13,7 @@ router.get("/", (req: Request, res: Response) => {
 
 router.get("/crawl", async (req: Request, res: Response) => {
   const builder = new DBBuilder();
-  await builder.crawl();
+  await builder.test();
   res.json({
     test: "hi"
   });

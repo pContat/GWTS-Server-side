@@ -7,12 +7,12 @@ import * as dotenv from "dotenv";
 import * as routes from "./routing";
 
 //Database connexion
-import { connection } from "./helper/mongoConnexion";
+import { connect } from "./helper/mongoConnexion";
 /**
  * Load environment variables from .env file, where API keys and passwords are configured.
  */
 dotenv.config({ path: ".env.dev" });
-const checkConnexion = connection;
+connect();
 
 const app = express();
 

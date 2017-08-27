@@ -13,18 +13,17 @@ Take care this database is not the production one and than you have backup
 import * as mongoose from "mongoose";
 import * as configuration from "../config";
 
-const connectionString = configuration.default.db.mongo;
-const connection: mongoose.Connection = mongoose.createConnection(
-  connectionString
-);
-// Use native promises
-(<any>mongoose).Promise = global.Promise;
+export function connect() {
+  const connectionString = configuration.default.db.mongo;
 
-connection.on("connected", function() {
-  console.log("Mongoose default connection open to " + connectionString);
-});
-connection.on("error", () => {
-  throw "Can't connect to db" + connectionString;
-});
+  //Database connexion
+  mongoose.connect(connectionString, {});
+  (<any>mongoose).Promise = global.Promise;
+  mongoose.connection.on("error", () => {
+    throw "Can't connect to db" + connectionString;
+  });
 
-export { connection };
+  mongoose.connection.on("connected", () => {
+    console.log("Mongoose connection open to " + connectionString);
+  });
+}

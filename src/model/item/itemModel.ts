@@ -13,7 +13,7 @@ export class ItemModel extends MongooseModel {
     item.demande = false;
     // FIXME DO nothing if already in
     return Item.update(
-      { item_id: itemData.id },
+      { id: itemData.id },
       { $setOnInsert: item },
       { upsert: true }
     ).exec();

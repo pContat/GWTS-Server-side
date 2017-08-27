@@ -14,14 +14,12 @@ const receiptSchema = new mongoose.Schema({
         type: Number
       }
     }
-  ],
-  receipt_id: {
-    type: Number,
-    unique: true,
-    required: true,
-    dropDups: true
-  },
-  output_item_id: { type: Number, ref: "item" }
+  ]
+  // receipt_id: {
+  //   type: Number,
+  //   unique: true,
+  //   dropDups: true
+  // }
 });
 
 const Receipt = mongoose.model("receipt", receiptSchema);
