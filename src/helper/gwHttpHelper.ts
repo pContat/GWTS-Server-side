@@ -49,6 +49,14 @@ export class GWHttpHelper {
     return this.get(GWUri.items + ids);
   }
 
+  static recipesDetail(recipesIds: string[]) {
+    let ids = "?ids=" + recipesIds[0];
+    for (let i = 1; i < recipesIds.length; i++) {
+      ids += "," + recipesIds[i];
+    }
+    return this.get(GWUri.recipes + ids);
+  }
+
   //Search for recipe that create 'item_id''
   static recipeFor(itemId: string) {
     var uri = `${GWUri.recipeSearch}${itemId}`;

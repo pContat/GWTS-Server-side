@@ -26,6 +26,18 @@ class MongooseModel {
     });
   }
 
+  public async get(objectRequest: any) {
+    return this.model.find(objectRequest).then((doc: any) => {
+      if (!doc) {
+        return Promise.reject({
+          code: 404
+        });
+      } else {
+        return Promise.resolve(doc);
+      }
+    });
+  }
+
   delete(objectId: mongoose.Types.ObjectId): mongoose.DocumentQuery<any, any> {
     return this.model.findOneAndRemove({ _id: objectId });
   }

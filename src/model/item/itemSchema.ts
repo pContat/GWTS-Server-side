@@ -32,8 +32,7 @@ const itemSchema = new mongoose.Schema({
     type: String
   },
   name: {
-    type: String,
-    required: true
+    type: String
   },
   icon: {
     type: String

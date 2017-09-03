@@ -9,6 +9,7 @@ const logPrefix = "DBBuilder";
 import { ItemModel } from "../model/item/itemModel";
 import { ItemType, default as Item } from "../model/item/itemSchema";
 import { RecipeModel } from "../model/recipe/recipeModel";
+import { RecipeType, default as Recipe } from "../model/recipe/recipeSchema";
 
 //Main that build the batabase
 export class DBBuilder {
@@ -30,6 +31,7 @@ export class DBBuilder {
     try {
       const items: any[] = await GWHttpHelper.items();
       const promiseArray: any[] = [];
+      console.log(items.length + " item to insert");
       //const items: any[] = [1, 2, 6];
       while (items.length > this.padding) {
         promiseArray.push(this.saveItems(items.splice(0, this.padding)));
@@ -44,79 +46,51 @@ export class DBBuilder {
       console.log(e);
     }
   }
-  async crawl() {
+
+  async insertRecipe() {
     try {
-      // const recipes = await GWHttpHelper.allRecipe();
-      // console.log(recipes.length + "receipt to insert");
-      const recipes = [1, 3, 5];
-      const promiseArray = recipes.map(this.saveRecipe.bind(this));
-      return Promise.all(promiseArray);
-    } catch (err) {
-      console.log(err);
+      const recipes: any[] = await GWHttpHelper.recipes();
+      const promiseArray: any[] = [];
+      console.log(recipes.length + " recipe to insert");
+      while (recipes.length > this.padding) {
+        promiseArray.push(this.saveRecipes(recipes.splice(0, this.padding)));
+        // prevent 429 too many request
+        if (promiseArray.length > 40) {
+          await Promise.all(promiseArray);
+          promiseArray.length = 0;
+        }
+      }
+      return recipes.length > 0 ? this.saveRecipes(recipes) : Promise.resolve();
+    } catch (e) {
+      console.log(e);
     }
   }
 
-  async saveRecipe(recipeId: string) {
-    if (!this.insertedRecipes.get(recipeId)) {
-      const detail = await GWHttpHelper.recipeDetail(recipeId);
+  async saveRecipes(recipesIds: string[]): Promise<any> {
+    const recipesData = await GWHttpHelper.recipesDetail(recipesIds);
 
-      let recipeData: any = {};
-      recipeData.output_item_id = detail.output_item_id;
-      recipeData.recipe_id = recipeId;
+    const itemDocument = recipesData.map(async (recipesData: any) => {
+      // get item from output
+      const item = await this.itemModel.get({ id: recipesData.output_item_id });
+      item.receipt = new Recipe(recipesData);
 
-      const ingredients = await this.saveIngredients(detail.ingredients);
-
-      recipeData.ingredients = ingredients;
-      await this.receiptModel.save(recipeData);
-      this.insertedRecipes.set(recipeId, true);
-    }
-    return true;
-  }
-
-  //Get info for item and save then into the database
-  //resollve ingredient object
-  saveIngredients(ingredients: string[]) {
-    return Promise.all(ingredients.map(this.saveOneIngredient.bind(this)));
-  }
-
-  //get info from GW2 APi and retrieve or insert the item
-  async saveOneIngredient(componentObject: any) {
-    if (!this.insertedItems.get(componentObject.item_id)) {
-      await this.saveItem(componentObject.item_id);
-      const iDontRemeenber = {
-        item: componentObject.item_id,
-        quantity: componentObject.count
-      };
-      this.insertedItems.set(componentObject.item_id, iDontRemeenber);
-      return Promise.resolve(iDontRemeenber);
-    }
-  }
-
-  async saveItem(itemId: string) {
-    const itemData = await GWHttpHelper.itemDetail(itemId);
-
-    return this.itemModel.saveItem(itemData);
+      // new item as itemTypes
+      return new Item(recipesData);
+    });
+    return this.itemModel.getModel().insertMany(itemDocument);
   }
 
   async saveItems(itemsIds: string[]): Promise<any> {
     const itemsData = await GWHttpHelper.itemsDetail(itemsIds);
-    const test = (error: any, doc: any) => {
-      console.log(error);
-      console.log(doc.length);
-    };
+
     const itemDocument = itemsData.map((itemData: any) => {
       itemData.receipt = [];
+      if (!itemData.name) {
+        console.log(itemData.id);
+      }
+      // new item as itemTypes
       return new Item(itemData);
     });
     return this.itemModel.getModel().insertMany(itemDocument);
-
-    // Item.insertMany(itemsData, test);
-    // setTimeout(() => Promise.resolve(), 2000);
-    // .then(function(mongooseDocuments) {
-    //   return Promise.resolve();
-    // })
-    // .catch(function(err) {
-    //   return Promise.reject(err);
-    // });
   }
 }
