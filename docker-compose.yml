@@ -2,30 +2,23 @@
 version: '2'
 
 services:
-
-  gwts-api:
+  rivierra-api:
     build: .
-    container_name: gwts-api-server-dev
-    command: nodemon -L --debug=5858 bin/www
+    container_name: rivierra-api-server-dev
+    command: nodemon -L --debug=5858 src/server
     image: gwts-api-server
     volumes:
-        - "./app:/app"
+        - "./src:/src"
     ports:
         - "3030:3030"
         - "5858:5858"
     links:
         - mongo
-
   mongo:
-    container_name: gwts-mongo-dev
+    container_name: mongo-dev
     image: mongo
     ports:
       - "27017:27017"
-    # volumes_from :
-    #   - mongodata
-
-  # mongodata :
-  #   images : tianon/true
-  #   volumes : /data/db
-  #   command : echo 'Data container for mongodb'
-
+    volumes:
+      - /Users/user_adm/Documents/docker/mongodb:/data/db
+  

@@ -11,14 +11,18 @@
       "cwd": "${workspaceRoot}",
       "preLaunchTask": null,
       "runtimeExecutable": null,
-      "runtimeArgs": ["--nolazy"],
+      "runtimeArgs": [
+        "--nolazy"
+      ],
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
+        "MONGO_URI": "mongodb://localhost:27017/riviera"
       },
-
       "console": "internalConsole",
       "sourceMaps": true,
-      "outFiles": ["${workspaceRoot}/dist/**/*.js"]
+      "outFiles": [
+        "${workspaceRoot}/dist/**/*.js"
+      ]
     },
     {
       "type": "node",

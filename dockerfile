@@ -4,9 +4,6 @@ FROM node:latest
 RUN mkdir /app
 RUN npm install nodemon -g
 
-#for production : pm2 start app.js
-#RUN npm install pm2 -g
-
 WORKDIR /app
 COPY ./app /app
 ADD package.json /app/package.json
