@@ -1,10 +1,7 @@
 #Developpement docker file
 
-
 FROM node:latest
-
 RUN mkdir /app
-
 RUN npm install nodemon -g
 
 #for production : pm2 start app.js

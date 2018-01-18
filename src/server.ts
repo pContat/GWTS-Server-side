@@ -68,12 +68,6 @@ if (app.get("env") === "development") {
 //Routing handling
 app.use("/api", routes);
 
-//Will create the database
-
-// const DBBuilder = require("./search/DBBuilder");
-// const DBB = new DBBuilder();
-// DBB.crawl();
-
 /**
  * Start Express server.
  */
