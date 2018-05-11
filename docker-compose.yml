@@ -1,10 +1,10 @@
-#docker-compose for developpement
+#docker-compose for development
 version: '2'
 
 services:
-  rivierra-api:
+  gwts-api:
     build: .
-    container_name: rivierra-api-server-dev
+    container_name: gwts-api-server-dev
     command: nodemon -L --debug=5858 src/server
     image: gwts-api-server
     volumes:
@@ -21,4 +21,3 @@ services:
       - "27017:27017"
     volumes:
       - /Users/user_adm/Documents/docker/mongodb:/data/db
-  

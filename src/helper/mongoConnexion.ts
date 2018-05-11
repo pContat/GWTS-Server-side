@@ -17,7 +17,7 @@ export function connect() {
   const connectionString = process.env["MONGO_URI"] || "mongodb://localhost:27017/riviera"
 
   //Database connexion
-  mongoose.connect(connectionString, { useMongoClient: true, promiseLibrary: global.Promise });
+  mongoose.connect(connectionString, {useMongoClient: true, promiseLibrary: global.Promise});
   // (<any>mongoose).Promise = global.Promise;
   mongoose.connection.on("error", () => {
     throw "Can't connect to db" + connectionString;

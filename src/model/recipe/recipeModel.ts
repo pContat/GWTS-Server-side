@@ -1,26 +1,26 @@
-import { default as Recipe, RecipeType } from "./recipeSchema";
-import { MongooseModel } from "../model";
 import * as mongoose from "mongoose";
+export type RecipeType = mongoose.Document & {
+  ingredients: number[];
+  receipt_id: number[];
+  output_item_id: string;
+};
 
-export class RecipeModel extends MongooseModel {
-  constructor() {
-    super(Recipe);
-  }
+const receiptSchema = new mongoose.Schema({
+  //A receipt is a list of ingredient that can be item
+  ingredients: [
+    {
+      item: { type: Number, ref: "item" },
+      quantity: {
+        type: Number
+      }
+    }
+  ]
+  // receipt_id: {
+  //   type: Number,
+  //   unique: true,
+  //   dropDups: true
+  // }
+});
 
-  save(receiptData: RecipeType) {
-    let receipt = new Recipe(receiptData);
-    return receipt.save();
-  }
-
-  getByReceiptID(receipt_id: number) {
-    return this.model.findOne({ receipt_id: receipt_id });
-  }
-
-  getReceiptFromOutput(output_item_id: number) {
-    return this.model.findOne({ output_item_id: output_item_id });
-  }
-
-  deleteReceipt(itemId: mongoose.Types.ObjectId) {
-    return this.delete(itemId);
-  }
-}
+const Receipt = mongoose.model("receipt", receiptSchema);
+export default Receipt;

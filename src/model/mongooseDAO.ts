@@ -1,6 +1,6 @@
 import * as mongoose from "mongoose";
 
-class MongooseModel {
+class MongooseDAO {
   protected model: mongoose.Model<mongoose.Document>;
   protected insertedDoc: Map<string, object>;
 
@@ -13,17 +13,16 @@ class MongooseModel {
     return this.model;
   }
 
-  public getById(objectId: mongoose.Types.ObjectId) {
-    return this.model.findById(objectId).then((doc: any) => {
-      if (!doc) {
-        return Promise.reject({
-          code: 404,
-          message: `${objectId} doesn't exists`
-        });
-      } else {
-        return Promise.resolve(doc);
-      }
-    });
+  public async getById(objectId: mongoose.Types.ObjectId) {
+
+    const doc = await  this.model.findById(objectId);
+    if (!doc) {
+      throw ({
+        code: 404,
+        message: `${objectId} doesn't exists`
+      })
+    }
+    return (doc)
   }
 
   public async get(objectRequest: any) {
@@ -39,7 +38,7 @@ class MongooseModel {
   }
 
   delete(objectId: mongoose.Types.ObjectId): mongoose.DocumentQuery<any, any> {
-    return this.model.findOneAndRemove({ _id: objectId });
+    return this.model.findOneAndRemove({_id: objectId});
   }
 
   gets(objectIds: Array<mongoose.Types.ObjectId>) {
@@ -51,4 +50,4 @@ class MongooseModel {
   }
 }
 
-export { MongooseModel };
+export {MongooseDAO};
