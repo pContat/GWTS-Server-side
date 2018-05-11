@@ -1,8 +1,7 @@
-
 const express = require("express");
-const router = express.Router();
-import { Request, Response } from "express";
+import {Request, Response, Router} from "express";
 
+const router = Router();
 /* GET home page. */
 
 router.get("/ping", (req: Request, res: Response) => {
@@ -12,5 +11,4 @@ router.get("/ping", (req: Request, res: Response) => {
 });
 
 
-
-export = router;
+export const PublicController: Router = router;

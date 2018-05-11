@@ -1,20 +1,25 @@
-import * as mongoose from "mongoose";
-export type RecipeType = mongoose.Document & {
-  ingredients: number[];
-  receipt_id: number[];
-  output_item_id: string;
-};
+import {Document, Model, model, Schema} from "mongoose";
 
-const receiptSchema = new mongoose.Schema({
+export interface Recipe {
+  ingredients: number[];
+  output_item_id: string;
+}
+
+export type RecipeDocument = Recipe & Document
+
+const recipeSchema = new Schema({
   //A receipt is a list of ingredient that can be item
   ingredients: [
     {
-      item: { type: Number, ref: "item" },
+      item: {type: Number, ref: "item"},
       quantity: {
         type: Number
       }
     }
-  ]
+  ],
+  output_item_id: {
+    type: Number
+  }
   // receipt_id: {
   //   type: Number,
   //   unique: true,
@@ -22,5 +27,6 @@ const receiptSchema = new mongoose.Schema({
   // }
 });
 
-const Receipt = mongoose.model("receipt", receiptSchema);
-export default Receipt;
+
+const RecipeModel: Model<RecipeDocument> = model<RecipeDocument>("Recipe", recipeSchema);
+export default RecipeModel;

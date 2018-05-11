@@ -1,26 +1,26 @@
-import { default as Recipe, RecipeType } from "./recipeModel";
-import { MongooseDAO } from "../mongooseDAO";
-import * as mongoose from "mongoose";
+import RecipeModel, {Recipe, RecipeDocument} from "./recipeModel";
+import {MongooseDAO} from "../mongooseDAO";
+import {Types} from "mongoose";
 
-export class RecipeDAO extends MongooseDAO {
+export class RecipeDAO extends MongooseDAO<RecipeDocument> {
   constructor() {
-    super(Recipe);
+    super(RecipeModel);
   }
 
-  save(receiptData: RecipeType) {
-    let receipt = new Recipe(receiptData);
+  save(receiptData: Recipe) {
+    let receipt = new RecipeModel(receiptData);
     return receipt.save();
   }
 
-  getByReceiptID(receipt_id: number) {
-    return this.model.findOne({ receipt_id: receipt_id });
+  async getByReceiptID(receipt_id: number): Promise<RecipeDocument | null> {
+    return this.model.findOne({receipt_id: receipt_id});
   }
 
   getReceiptFromOutput(output_item_id: number) {
-    return this.model.findOne({ output_item_id: output_item_id });
+    return this.model.findOne({output_item_id: output_item_id});
   }
 
-  deleteReceipt(itemId: mongoose.Types.ObjectId) {
+  deleteReceipt(itemId: Types.ObjectId) {
     return this.delete(itemId);
   }
 }

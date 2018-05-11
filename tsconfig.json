@@ -1,32 +1,16 @@
 {
+  "compileOnSave": false,
   "compilerOptions": {
     /* Basic Options */
     "target": "es6",
     "module": "commonjs",
-    "declaration": true,
     "sourceMap": true,
     "outDir": "dist",
-    // transpile JS in this directory
     "strict": true,
     "moduleResolution": "node",
-    /* Specify module resolution strategy: 'node' (Node.js) or 'classic' (TypeScript pre-1.6). */
-    "baseUrl": "src",
-    /* Base directory to resolve non-absolute module names. */
-    "paths": {
-      "@app/*": [
-        "app/*"
-      ],
-      "@business/*": [
-        "business/*"
-      ],
-      "@model/*": [
-        "model/*"
-      ]
-    },
-    "allowSyntheticDefaultImports": true,
+    "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    /* Enables experimental support for ES7 decorators. */
-    "emitDecoratorMetadata": true
+    "esModuleInterop": true
   },
   "include": [
     "src/**/*.ts"

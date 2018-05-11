@@ -1,21 +1,21 @@
-import { default as Item, ItemType } from "./itemModel";
-import { MongooseDAO } from "../mongooseDAO";
+import ItemModel, {Item, ItemDocument} from "./itemModel";
+import {MongooseDAO} from "../mongooseDAO";
 
-export class ItemDAO extends MongooseDAO {
+export class ItemDAO extends MongooseDAO<ItemDocument> {
   constructor() {
-    super(Item);
+    super(ItemModel);
   }
 
   //Map data from the Api to our structure
-  saveItem(itemData: ItemType) {
-    let item: any = new Item(itemData);
+  saveItem(itemData: Item) {
+    let item: any = new ItemModel(itemData);
     item.top = false;
     item.demande = false;
     // FIXME DO nothing if already in
-    return Item.update(
-      { id: itemData.id },
-      { $setOnInsert: item },
-      { upsert: true }
+    return ItemModel.update(
+      {id: itemData.id},
+      {$setOnInsert: item},
+      {upsert: true}
     ).exec();
   }
 

@@ -1,21 +1,22 @@
-import * as mongoose from "mongoose";
+import {Document, DocumentQuery, Model, Types} from "mongoose";
 
-class MongooseDAO {
-  protected model: mongoose.Model<mongoose.Document>;
+class MongooseDAO<T extends Document> {
   protected insertedDoc: Map<string, object>;
 
-  constructor(schema: mongoose.Model<mongoose.Document>) {
-    this.model = schema;
+  constructor(schema: Model<T>) {
+    this._model = schema;
     this.insertedDoc = new Map<string, object>();
   }
 
-  public getModel() {
-    return this.model;
+  protected _model: Model<T>;
+
+  get model() {
+    return this._model;
   }
 
-  public async getById(objectId: mongoose.Types.ObjectId) {
+  public async getById(objectId: Types.ObjectId): Promise<T> {
 
-    const doc = await  this.model.findById(objectId);
+    const doc = await this.model.findById(objectId);
     if (!doc) {
       throw ({
         code: 404,
@@ -25,7 +26,7 @@ class MongooseDAO {
     return (doc)
   }
 
-  public async get(objectRequest: any) {
+  public async get(objectRequest: any): Promise<T[]> {
     return this.model.find(objectRequest).then((doc: any) => {
       if (!doc) {
         return Promise.reject({
@@ -37,11 +38,11 @@ class MongooseDAO {
     });
   }
 
-  delete(objectId: mongoose.Types.ObjectId): mongoose.DocumentQuery<any, any> {
+  delete(objectId: Types.ObjectId): DocumentQuery<any, any> {
     return this.model.findOneAndRemove({_id: objectId});
   }
 
-  gets(objectIds: Array<mongoose.Types.ObjectId>) {
+  gets(objectIds: Types.ObjectId[]) {
     return this.model.find({
       item_id: {
         $in: objectIds

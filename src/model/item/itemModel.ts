@@ -1,9 +1,13 @@
-import Receipt from "../recipe/recipeModel";
-import * as mongoose from "mongoose";
+import {Document, Model, model, Schema} from "mongoose";
+import RecipeModel from "../recipe/recipeModel";
+import {RecipeDocument} from "..";
 
-export type ItemType = mongoose.Document & {
-  id: string;
-  fromReceipt: number;
+
+export type ItemDocument = Item & Document;
+
+export interface Item {
+  id: number;
+  fromReceipt: RecipeDocument;
   type: string;
   name: string;
   icon: string;
@@ -13,18 +17,18 @@ export type ItemType = mongoose.Document & {
   flags: string[];
   //Does this item have good buy/sell ratio
   demande: boolean;
-};
+}
 
 //Definition of one item
-const itemSchema = new mongoose.Schema({
+const itemSchema = new Schema({
   id: {
-    type: String,
+    type: Number,
     unique: true,
     required: true
   },
   //If the item is the result of a receipt
   fromReceipt: {
-    type: Receipt.schema,
+    type: RecipeModel.schema,
     default: null
   },
   //Armor / Weapon / etc
@@ -45,7 +49,7 @@ const itemSchema = new mongoose.Schema({
   rarity: {
     type: String
   },
-  flags: [{ type: String }],
+  flags: [{type: String}],
   //Does this item is a top deal?
   top: {
     type: Boolean,
@@ -58,5 +62,9 @@ const itemSchema = new mongoose.Schema({
     default: false
   }
 });
-const Item = mongoose.model("Item", itemSchema);
-export default Item;
+/*const Item = model("Item", itemSchema);
+export default Item;*/
+
+
+const ItemModel: Model<ItemDocument> = model<ItemDocument>("Item", itemSchema);
+export default ItemModel;

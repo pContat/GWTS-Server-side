@@ -1,9 +1,9 @@
-import {ItemDetail} from "@model/httpGWApi";
-import Item from "@model/item/itemModel";
+import ItemModel, {ItemDocument} from "../../model/item/itemModel";
+import {ItemDetail} from "../../model";
 
-export function httpGWItemToItem(itemData: ItemDetail): any {
+export function httpGWItemToItem(itemData: ItemDetail): ItemDocument {
   if (!itemData.name) {
-    console.log(itemData.id);
+    console.log(itemData.id, 'as no name');
   }
-  return new Item(itemData);
+  return new ItemModel(itemData);
 }
