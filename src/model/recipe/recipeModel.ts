@@ -1,8 +1,19 @@
 import {Document, Model, model, Schema} from "mongoose";
 
+export interface Ingredient {
+  item_id: number,
+  count: number,
+  isCraftable: boolean,
+}
+
+
 export interface Recipe {
-  ingredients: number[];
-  output_item_id: string;
+  ingredients: Ingredient[];
+  output_item_id: number;
+  id: number;
+  type: string
+  chat_link: string;
+  tree: string,
 }
 
 export type RecipeDocument = Recipe & Document
@@ -11,22 +22,35 @@ const recipeSchema = new Schema({
   //A receipt is a list of ingredient that can be item
   ingredients: [
     {
-      item: {type: Number, ref: "item"},
-      quantity: {
+      item_id: {type: Number},
+      count: {
         type: Number
-      }
+      },
+      isCraftable: {
+        type: Boolean,
+        default: false
+      },
+      tree: {type: String},
+      id: {type: Number},
+      type: {type: String},
+      chat_link: {type: String}
     }
   ],
   output_item_id: {
     type: Number
+  },
+  id: {
+    type: Number
+  },
+  type: {
+    type: String
+  },
+  chat_link: {
+    type: String
+  },
+  tree: {
+    type: String
   }
-  // receipt_id: {
-  //   type: Number,
-  //   unique: true,
-  //   dropDups: true
-  // }
 });
-
-
 const RecipeModel: Model<RecipeDocument> = model<RecipeDocument>("Recipe", recipeSchema);
 export default RecipeModel;

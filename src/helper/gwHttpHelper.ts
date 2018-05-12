@@ -1,5 +1,7 @@
 import request from "request-promise-native";
-import {ItemDetail, ReceiptDetail} from "../model";
+import {GWAPI} from "../model";
+import ReceiptDetail = GWAPI.ReceiptDetail;
+import ItemDetail = GWAPI.ItemDetail;
 
 const lang = 'fr';
 

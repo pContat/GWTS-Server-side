@@ -1,13 +1,11 @@
 import minimist from "minimist";
-import dotenv from "dotenv";
 import {DBBuilder} from "../../business";
-import {mongoSingleConnect} from "../../helper";
 import logger from "../../helper/logger";
+import {setup} from "./abstractExecutable";
 
 (async function main() {
   try {
-    dotenv.config({path: ".env.dev"});
-    mongoSingleConnect();
+    setup();
     const argv = minimist(process.argv.slice(2));
     const dbBuilder = new DBBuilder();
     await dbBuilder.importItems();
@@ -16,5 +14,6 @@ import logger from "../../helper/logger";
   } catch (e) {
     console.error(e.message);
   }
+  return
 })();
 

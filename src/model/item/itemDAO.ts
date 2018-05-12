@@ -19,6 +19,11 @@ export class ItemDAO extends MongooseDAO<ItemDocument> {
     ).exec();
   }
 
+
+  /*    db.parents.find(
+  {'children.age': {$gte: 18}},
+  {children:{$elemMatch:{age: {$gte: 18}}}})*/
+
   //Todo : use findOneAndUpdate
   // update(item_id, data) {
   //   return Item.findById(item_id)

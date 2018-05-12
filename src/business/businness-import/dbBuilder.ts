@@ -1,34 +1,27 @@
-import {ItemDAO, ItemDocument, RecipeDAO, RecipeDocument} from "../../model";
+import {GWAPI, ItemDAO, ItemDocument, RecipeDocument} from "../../model";
 import {httpGWItemToItem} from "./httpGWToModelConverter";
 import logger from "../../helper/logger";
 import {GWHttpHelper} from "../../helper";
-import RecipeModel from "../../model/recipe/recipeModel";
-import {ReceiptDetail} from "../../model/httpGWApi";
-
-
-const logPrefix = "DBBuilder";
+import RecipeModel, {Ingredient} from "../../model/recipe/recipeModel";
+import {createRootTree, ingredientsToNodes, Node} from "./recipeTree";
+import ReceiptDetail = GWAPI.ReceiptDetail;
 
 export class DBBuilder {
   itemDAO: ItemDAO;
-  recipeDAO: RecipeDAO;
   // warning size
-  recipeFromCache: Map<number, RecipeDocument>;
-
+  recipeForItemCache: Map<number, RecipeDocument>;
   private padding = 200;
 
   constructor() {
-    this.recipeFromCache = new Map<number, RecipeDocument>();
+    this.recipeForItemCache = new Map<number, RecipeDocument>();
     this.itemDAO = new ItemDAO();
-    this.recipeDAO = new RecipeDAO();
   }
-
 
   async importItems() {
     try {
       await this.createRecipeCache();
       const items: any[] = await GWHttpHelper.getAllItemsId();
       logger.info(items.length + " item to insert");
-      //const getAllItemsId: any[] = [1, 2, 6];
       return await this.queuedCall(items, this.saveItems.bind(this));
     } catch (e) {
       logger.error(e);
@@ -49,8 +42,8 @@ export class DBBuilder {
     try {
       const recipesData = await GWHttpHelper.recipesDetail(recipesIds);
       recipesData.forEach((recipesData: ReceiptDetail) => {
-        const fromReceipt = new RecipeModel(recipesData);
-        this.recipeFromCache.set(recipesData.output_item_id, fromReceipt);
+        const fromRecipe = new RecipeModel(recipesData);
+        this.recipeForItemCache.set(fromRecipe.output_item_id, fromRecipe);
       });
     } catch (e) {
       logger.error(e.message)
@@ -79,15 +72,45 @@ export class DBBuilder {
         promiseArray.length = 0;
       }
     }
-    return items.length > 0 ? await this.saveItems(items) : Promise.resolve();
+    // await the pending request
+    await Promise.all(promiseArray);
+    // not good att all
+    return items.length > 0 ? await functionToCall(items) : Promise.resolve();
   }
 
   private linkRecipeToItem(item: ItemDocument) {
-    const recipeForItem = this.recipeFromCache.get(item.id);
+    const recipeForItem = this.recipeForItemCache.get(item.id);
     if (recipeForItem) {
-      item.fromReceipt = recipeForItem;
+      recipeForItem.ingredients.forEach((ingredient: Ingredient) => {
+        ingredient.isCraftable = !!this.recipeForItemCache.get(ingredient.item_id);
+      });
+      item.fromRecipe = recipeForItem;
+      const recipeTree = this.buildRecipeTree(item);
+      item.fromRecipe.tree = JSON.stringify(recipeTree);
+      logger.info(item.fromRecipe.tree);
+
     } else {
       logger.debug('no recipe for item ', item.id);
     }
   }
+
+  // TODO: can use cache to improve creation time : priority low
+  private buildRecipeTree(item: ItemDocument): Node<Ingredient> {
+    const stack: Node<Ingredient>[] = [];
+    const root = createRootTree(item);
+    stack.push(root);
+    while (stack.length > 0) {
+      const currentItem = stack.pop() as Node<Ingredient>; //can't be undefined -> force cast
+      for (const ingredientNode of currentItem.children) {
+        const recipe = this.recipeForItemCache.get(ingredientNode.data.item_id);
+        if (recipe) {
+          // const item = await itemDao.model.findOne({id: ingredientNode.data.item_id}) as ItemDocument;
+          ingredientNode.children.push(...ingredientsToNodes(recipe));
+        }
+        stack.push(ingredientNode)
+      }
+    }
+    return root;
+  }
+
 }

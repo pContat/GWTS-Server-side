@@ -7,7 +7,7 @@ export type ItemDocument = Item & Document;
 
 export interface Item {
   id: number;
-  fromReceipt: RecipeDocument;
+  fromRecipe: RecipeDocument;
   type: string;
   name: string;
   icon: string;
@@ -27,7 +27,7 @@ const itemSchema = new Schema({
     required: true
   },
   //If the item is the result of a receipt
-  fromReceipt: {
+  fromRecipe: {
     type: RecipeModel.schema,
     default: null
   },
@@ -55,16 +55,12 @@ const itemSchema = new Schema({
     type: Boolean,
     default: false
   },
-
   //Does this item have good buy/sell ratio
   demande: {
     type: Boolean,
     default: false
   }
 });
-/*const Item = model("Item", itemSchema);
-export default Item;*/
-
 
 const ItemModel: Model<ItemDocument> = model<ItemDocument>("Item", itemSchema);
 export default ItemModel;

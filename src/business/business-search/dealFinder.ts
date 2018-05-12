@@ -1,5 +1,70 @@
+// add full search time , 1st deal found
+/*TODO :
+- add worker
+- add Redis for cache and message broker
+- store best deal
+- persist full recipe (expand mode)
+- use inventory API
+
+*/
+
+
+import {ItemDAO} from "../../model";
+
+export class DealFinder {
+  itemDAO: ItemDAO;
+
+  constructor() {
+    this.itemDAO = new ItemDAO();
+  }
+
+  // TODO take care of price increase if large buy
+  getCommercePriceWithQuantity(quantity: any, commerceListing: any) {
+    //display the final result
+    let itemPrice = 0;
+    for (var stack in commerceListing.sells) {
+      var stackQuantity = commerceListing.sells[stack].quantity;
+      if (stackQuantity === 'undefined') console.error('Stack quantity undefined');
+      if (stackQuantity >= quantity) {
+        itemPrice += commerceListing.sells[stack].unit_price * quantity;
+        return itemPrice;
+      } else {
+        itemPrice += commerceListing.sells[stack].unit_price * stackQuantity;
+        quantity -= stackQuantity;
+      }
+    }
+    //No sufficient compo
+    return -1;
+  }
+
+  /* findBuyPrice(item_id : any) {
+     return new Promise(function (resolve, reject) {
+       var itemId = self.craftRecip.first.output_item_id;
+       getCommercePrice(itemId)
+         .then(function (prices) {
+           if (prices.sells.quantity >= minSellNumber && prices.buys.quantity >= minBuyNumber) {
+             self.buyPrice = prices.sells.unit_price;
+             if (DEBUG) {
+               console.log(logPrefix + 'find a buy price :' + self.buyPrice);
+             }
+             resolve(true);
+           } else {
+             console.log('Do not have the min sale requirement');
+             resolve(false);
+           }
+         })
+         .catch(function (e) {
+           console.error('There is no prices at all');
+           onError(e);
+           resolve(false);
+         });
+     });
+   }*/
+
+}
+
+
 /*
-"use strict";
 const request = require("request"),
   conf = require("../config"),
   CallHelper = require("./callHelper"),
@@ -14,9 +79,6 @@ class DealFinder {
     this.receiptModel = new ReceiptModel();
   }
 
-  find() {
-
-  }
 
   getCraftPrice(item_id) {
     const that = this;
@@ -109,34 +171,6 @@ class DealFinder {
     }
   };
 
-  //Based on curent comerce list compute the craftDetailPrice for a compo
-  getCommercePriceWithQuantity(quantity, commerceListing) {
-    //display the final result
-    let itemPrice = 0;
-    for (var stack in commerceListing.sells) {
-      var stackQuantity = commerceListing.sells[stack].quantity;
-      if (stackQuantity === 'undefined') console.error('Stack quantity undefined');
-      if (stackQuantity >= quantity) {
-        itemPrice += commerceListing.sells[stack].unit_price * quantity;
-        return itemPrice;
-      } else {
-        itemPrice += commerceListing.sells[stack].unit_price * stackQuantity;
-        quantity -= stackQuantity;
-      }
-    }
-    //No sufficient compo
-    return -1;
-  }
-
-
-  //getData
-  //this.cachedClient.set(item_id, commerceListing);
-  //const key = item_id + "_listing";
-  //this.cachedClient.set(item_id, commerceListing);
-
-  //for i in compoent {
-  //totalpric =+ computcraft()
-  //}
 
   //Ask the API for the first buy price
   findBuyPrice(item_id) {
@@ -165,5 +199,4 @@ class DealFinder {
 
 }
 
-module.exports = DealFinder;
 */
