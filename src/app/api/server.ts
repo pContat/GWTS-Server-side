@@ -7,7 +7,7 @@ import errorHandler from "errorhandler";
 import dotenv from "dotenv";
 import {RootController} from "./routing";
 import {setCors} from "./cors";
-import {mongoSingleConnect} from "../../helper";
+import {mongoSingleConnect} from "../../lib/index";
 
 //Database connexion
 

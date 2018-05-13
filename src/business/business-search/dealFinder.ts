@@ -1,5 +1,5 @@
-// add full search time , 1st deal found
 /*TODO :
+- log search time
 - add worker
 - add Redis for cache and message broker
 - store best deal
@@ -9,13 +9,24 @@
 */
 
 
-import {ItemDAO} from "../../model";
+import {Item, ItemDAO} from "../../model";
+import {getCommercePrice} from "../../lib";
+import {DealCritera, defaultDealCriteria} from "./dealCritera";
+import logger from "../../lib/logger/logger";
+
+const logPrefix = "dealFinder";
 
 export class DealFinder {
   itemDAO: ItemDAO;
 
+  private commerceListingCache: Map<number, any>;
+  private configuration: DealCritera;
+
   constructor() {
     this.itemDAO = new ItemDAO();
+    // todo : move this to dedicated class or redis
+    this.commerceListingCache = new Map<number, any>();
+    this.configuration = defaultDealCriteria;
   }
 
   // TODO take care of price increase if large buy
@@ -37,48 +48,27 @@ export class DealFinder {
     return -1;
   }
 
-  /* findBuyPrice(item_id : any) {
-     return new Promise(function (resolve, reject) {
-       var itemId = self.craftRecip.first.output_item_id;
-       getCommercePrice(itemId)
-         .then(function (prices) {
-           if (prices.sells.quantity >= minSellNumber && prices.buys.quantity >= minBuyNumber) {
-             self.buyPrice = prices.sells.unit_price;
-             if (DEBUG) {
-               console.log(logPrefix + 'find a buy price :' + self.buyPrice);
-             }
-             resolve(true);
-           } else {
-             console.log('Do not have the min sale requirement');
-             resolve(false);
-           }
-         })
-         .catch(function (e) {
-           console.error('There is no prices at all');
-           onError(e);
-           resolve(false);
-         });
-     });
-   }*/
+  private async findBuyPrice(item: Item): Promise<number> {
+    const price = await getCommercePrice(item.id);
+    // TODO : compute diff between sell and buy
+    const minCheck = price.sells.quantity >= this.configuration.minSellNumber && price.buys.quantity >= this.configuration.minBuyNumber;
+    if (minCheck) {
+      const buyPrice = price.sells.unit_price;
+      logger.info(logPrefix + 'find a buy price :' + buyPrice);
+      return buyPrice;
+    }
+    return -1;
+  }
+
+
+  private getRecipeCraftPrice() {
+
+  }
 
 }
 
 
 /*
-const request = require("request"),
-  conf = require("../config"),
-  CallHelper = require("./callHelper"),
-  ReceiptModel = require("../_model/receiptModel"),
-  ItemModel = require("../_model/itemModel");
-
-class DealFinder {
-  constructor(item_id, redisClient) {
-    this.item_id = item_id;
-    this.cachedClient = redisClient;
-    this.itemModel = new ItemModel();
-    this.receiptModel = new ReceiptModel();
-  }
-
 
   getCraftPrice(item_id) {
     const that = this;
@@ -170,33 +160,5 @@ class DealFinder {
       }
     }
   };
-
-
-  //Ask the API for the first buy price
-  findBuyPrice(item_id) {
-    return new Promise(function (resolve, reject) {
-      var itemId = self.craftRecip.first.output_item_id;
-      getCommercePrice(itemId)
-        .then(function (prices) {
-          if (prices.sells.quantity >= minSellNumber && prices.buys.quantity >= minBuyNumber) {
-            self.buyPrice = prices.sells.unit_price;
-            if (DEBUG) {
-              console.log(logPrefix + 'find a buy price :' + self.buyPrice);
-            }
-            resolve(true);
-          } else {
-            console.log('Do not have the min sale requirement');
-            resolve(false);
-          }
-        })
-        .catch(function (e) {
-          console.error('There is no prices at all');
-          onError(e);
-          resolve(false);
-        });
-    });
-  }
-
-}
 
 */

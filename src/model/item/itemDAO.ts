@@ -1,5 +1,5 @@
 import ItemModel, {Item, ItemDocument} from "./itemModel";
-import {MongooseDAO} from "../mongooseDAO";
+import {MongooseDAO} from "../../lib/mongo/mongooseDAO";
 
 export class ItemDAO extends MongooseDAO<ItemDocument> {
   constructor() {

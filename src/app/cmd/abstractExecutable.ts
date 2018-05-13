@@ -1,4 +1,4 @@
-import {mongoSingleConnect} from "../../helper";
+import {mongoSingleConnect} from "../../lib/index";
 import dotenv from "dotenv"
 
 export function setup() {

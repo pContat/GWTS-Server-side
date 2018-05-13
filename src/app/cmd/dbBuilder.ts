@@ -1,6 +1,6 @@
 import minimist from "minimist";
 import {DBBuilder} from "../../business";
-import logger from "../../helper/logger";
+import logger from "../../lib/logger/logger";
 import {setup} from "./abstractExecutable";
 
 (async function main() {

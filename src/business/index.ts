@@ -1,2 +1,2 @@
 export * from './businness-import/dbBuilder';
-export * from './businness-import/httpGWToModelConverter';
+export * from '../lib/gwApi/gwApiToModelConverter';

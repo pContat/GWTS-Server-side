@@ -50,5 +50,37 @@ export namespace GWAPI {
     chat_link: string;
   }
 
+  export interface Listing {
+    id: number;
+    buys: Buy[];
+    sells: Sell[];
+  }
+
+
+  export interface Price {
+    id: number;
+    whitelisted: boolean;
+    buys: {
+      quantity: number;
+      unit_price: number;
+    }
+    sells: {
+      quantity: number;
+      unit_price: number;
+    };
+  }
+
+  export interface Buy {
+    listings: number; //The number of individual listings this object refers to (e.g. two players selling at the same price will end up in the same listing)
+    unit_price: number;
+    quantity: number;
+  }
+
+  export interface Sell {
+    listings: number;
+    unit_price: number;
+    quantity: number;
+  }
+
 
 }
