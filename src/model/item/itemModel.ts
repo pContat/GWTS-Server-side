@@ -13,10 +13,9 @@ export interface Item {
   icon: string;
   level: number;
   rarity: string;
-  top: boolean;
-  flags: string[];
-  //Does this item have good buy/sell ratio
-  demande: boolean;
+  vendor_value: number,
+  chat_link: string
+  flags: string[]
 }
 
 //Definition of one item
@@ -44,22 +43,16 @@ const itemSchema = new Schema({
   level: {
     type: Number
   },
-
-  //Rarity of the object
   rarity: {
     type: String
   },
   flags: [{type: String}],
-  //Does this item is a top deal?
-  top: {
-    type: Boolean,
-    default: false
+  chat_link: {
+    type: String
   },
-  //Does this item have good buy/sell ratio
-  demande: {
-    type: Boolean,
-    default: false
-  }
+  vendor_value: {
+    type: Number
+  },
 });
 
 const ItemModel: Model<ItemDocument> = model<ItemDocument>("Item", itemSchema);

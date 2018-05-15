@@ -74,7 +74,7 @@ export async function getCommerceListings(itemsIds: number[]): Promise<Listing[]
   // splite the request into multiple request of 4 to avoid partial content status
   const requestUriList = splitRequest(itemsIds);
   const finalUri = requestUriList.map(buildIdParams);
-  const requestPromise = finalUri.map((idsURI) => get(GWUri.recipes + idsURI));
+  const requestPromise = finalUri.map((idsURI) => get(GWUri.listings + idsURI));
   const responseArray: Listing[][] = await Promise.all(requestPromise);
   const flattenArray = flatten(responseArray);
   //cflattenArray.forEach(sortListingByPrice); suppose to be sorted from documentation https://wiki.guildwars2.com/wiki/API:2/commerce/listings

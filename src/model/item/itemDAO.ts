@@ -19,6 +19,11 @@ export class ItemDAO extends MongooseDAO<ItemDocument> {
     ).exec();
   }
 
+  async getVendorPrice(itemId: number): Promise<number> {
+    const item = await this.findOne({"id": itemId});
+    return item.vendor_value;
+  }
+
 
   /*    db.parents.find(
   {'children.age': {$gte: 18}},

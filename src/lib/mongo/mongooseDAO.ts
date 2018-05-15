@@ -14,40 +14,36 @@ class MongooseDAO<T extends Document> {
     return this._model;
   }
 
-  public async getById(objectId: Types.ObjectId): Promise<T> {
 
-    const doc = await this.model.findById(objectId);
-    if (!doc) {
-      throw ({
-        code: 404,
-        message: `${objectId} doesn't exists`
-      })
-    }
-    return (doc)
+  public async find(objectRequest: Object): Promise<T[]> {
+    return await this.model.find(objectRequest);
   }
 
-  public async get(objectRequest: any): Promise<T[]> {
-    return this.model.find(objectRequest).then((doc: any) => {
-      if (!doc) {
-        return Promise.reject({
-          code: 404
-        });
-      } else {
-        return Promise.resolve(doc);
-      }
-    });
+  public async findOne(condition: Object): Promise<T> {
+    const result = await this.model.findOne(condition);
+    this.throwIfNotFound(result);
+    return result as T;
   }
 
   delete(objectId: Types.ObjectId): DocumentQuery<any, any> {
     return this.model.findOneAndRemove({_id: objectId});
   }
 
-  gets(objectIds: Types.ObjectId[]) {
+  findByIds(objectIds: Types.ObjectId[]) {
     return this.model.find({
       item_id: {
         $in: objectIds
       }
     });
+  }
+
+  private throwIfNotFound(result: any) {
+    if (!result) {
+      throw ({
+        code: 404,
+        message: `no entity found for criteria `
+      })
+    }
   }
 }
 

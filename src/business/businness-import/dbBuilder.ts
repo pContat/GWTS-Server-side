@@ -1,9 +1,9 @@
 import {GWAPI, ItemDAO, ItemDocument, RecipeDocument} from "../../model";
 import {GWApiItemToItem} from "../../lib/gwApi/gwApiToModelConverter";
 import logger from "../../lib/logger/logger";
-import {getAllItemsId, getAllRecipesId, getItemsDetail, getRecipesDetail} from "../../lib/index";
+import {getAllItemsId, getAllRecipesId, getItemsDetail, getRecipesDetail, TreeNode} from "../../lib/index";
 import RecipeModel, {Ingredient} from "../../model/recipe/recipeModel";
-import {createRootTree, ingredientsToNodes, TreeNode} from "../../lib/recipeTree/recipeTree";
+import {createRootTree, ingredientsToNodes} from "../../lib/recipeTree/ingredientTree";
 import ReceiptDetail = GWAPI.ReceiptDetail;
 
 export class DBBuilder {
@@ -61,7 +61,6 @@ export class DBBuilder {
     }
   }
 
-
   private async queuedCall(items: any[], functionToCall: Function) {
     const promiseArray: any[] = [];
     while (items.length > this.padding) {
@@ -113,4 +112,17 @@ export class DBBuilder {
     return root;
   }
 
+
+  private itemExeption() {
+    /* Lump of Tin (10)	Crafting material	Basic	80 Copper coin
+     Lump of Coal.png Lump of Coal (10)	Crafting material	Basic	1 Silver coin 60 Copper coin
+     Lump of Coal.png Lump of Primordium (10)	Crafting material	Basic	4 Silver coin 80 Copper coin
+     Spool of Jute Thread.png Spool of Jute Thread (10)	Crafting material	Basic	80 Copper coin
+     Spool of Wool Thread.png Spool of Wool Thread (10)	Crafting material	Basic	1 Silver coin 60 Copper coin
+     Spool of Cotton Thread.png Spool of Cotton Thread (10)	Crafting material	Basic	2 Silver coin 40 Copper coin
+     Spool of Linen Thread.png Spool of Linen Thread (10)	Crafting material	Basic	3 Silver coin 20 Copper coin
+     Spool of Silk Thread.png Spool of Silk Thread (10)	Crafting material	Basic	4 Silver coin 80 Copper coin
+     Spool of Gossamer Thread.png Spool of Gossamer Thread (10)	Crafting material	Basic	6 Silver coin 40 Copper coin
+     Thermocatalytic Reagent.png Thermocatalytic Reagent (10)	Crafting material	Ascended	14 Silver coin 96 Copper coin*/
+  }
 }
