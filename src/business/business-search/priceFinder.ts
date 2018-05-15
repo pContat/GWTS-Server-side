@@ -25,6 +25,8 @@ export class PriceFinder {
     // todo : use shortcut if found
     // little error percent here if we use shortcut X time
     // use validator to confirm and mitigate the error
+
+    // todo : warning check if purposable before
     let itemListing: Listing = this.commerceListingCache.get(itemId);
     // if no listing it can be found in vendor_value /item
     if (!itemListing) {
@@ -40,13 +42,13 @@ export class PriceFinder {
     while (numberToBuy > 0) {
       const stackQuantity = itemListing.sells[i].quantity;
       const stackUnitPrice = itemListing.sells[i].unit_price;
-      const notEnoughSellInStack = numberToBuy - stackQuantity;
+      const notEnoughSellInStack = stackQuantity - numberToBuy < 0;
       if (notEnoughSellInStack) {
         total += stackUnitPrice * stackQuantity;
         numberToBuy -= stackQuantity;
         i++;
         if (!itemListing.sells[i]) {
-          return -1;
+          return this.CANTBUY;
         }
       } else {
         total += stackUnitPrice * numberToBuy;
@@ -70,6 +72,7 @@ export class PriceFinder {
     if (cantCraft) {
       return this.CANTCRAFT
     }
+
     return ingredientsPrice.reduce((a, b) => a + b, 0);
   }
 
@@ -85,9 +88,17 @@ export class PriceFinder {
   private async listingNotFoundHandler(itemId: number) {
     logger.debug('no listing for ' + itemId);
     const price = await this.itemDAO.getVendorPrice(itemId);
-    const fakeListing = this.createFakeListing(itemId, price);
+    const fakeListing = (price === 0) ? this.createEmptyListing(itemId) : this.createFakeListing(itemId, price);
     this.putListingsInCache([fakeListing]);
     return this.commerceListingCache.get(itemId);
+  }
+
+  private createEmptyListing(itemId: number) {
+    return {
+      id: itemId,
+      buys: [],
+      sells: []
+    };
   }
 
   // some item can't be buy in trading post but to pnj

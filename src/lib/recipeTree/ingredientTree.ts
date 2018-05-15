@@ -5,7 +5,7 @@ export function createRootTree(item: ItemDocument): TreeNode<Ingredient> {
   const recipe: RecipeDocument = item.fromRecipe;
   const data = {count: 1, item_id: recipe.output_item_id, isCraftable: true} as Ingredient;
   const root = new TreeNode<Ingredient>(data); // 1 : output item id
-  root.children.push(...ingredientsToNodes(recipe)); //do not break reference
+  root.children.push(...recipeToNodes(recipe)); //do not break reference
   return root
 }
 
@@ -24,9 +24,15 @@ export function getAllItemId(root: TreeNode<Ingredient>): number[] {
   return Array.from(new Set(ids));
 }
 
-export function ingredientsToNodes(recipe: RecipeDocument) {
+export function recipeToNodes(recipe: RecipeDocument, quantity = 1): TreeNode<Ingredient>[] {
+
   return recipe.ingredients.map((ingredient) => {
-    const data = {count: ingredient.count, item_id: ingredient.item_id, isCraftable: ingredient.isCraftable};
+    const data = {
+      count: ingredient.count * quantity,
+      item_id: ingredient.item_id,
+      isCraftable: ingredient.isCraftable,
+      outputCountIfCraft: 1
+    };
     return new TreeNode<Ingredient>(data)
   })
 }

@@ -1,12 +1,16 @@
 import {TreeNode} from "../../lib";
 import {Ingredient, Item, ItemDAO} from "../../model";
 import {PriceFinder} from "./priceFinder";
-import {map} from "lodash";
+import {clone, map} from "lodash";
 import logger from "../../lib/logger/logger";
 import {nodeToString, SearchableRecipeNode} from "./searchableRecipeNode";
 import {getAllItemId} from "../../lib/recipeTree/ingredientTree";
 import {printTree} from "../../lib/recipeTree/printTree";
 
+
+export interface BuyableIngredient extends Ingredient {
+  buyPrice: number;
+}
 
 /**
  * Find the best recipe to craft the given item
@@ -27,7 +31,7 @@ export class RecipeFinder {
   }
 
 
-  public async getRecipeCraftPrice(item: Item) {
+  public async getRecipeCraftPrice(item: Item): Promise<Ingredient[]> {
     // use cache for listing and deal
     if (!item.fromRecipe) {
       logger.info('cant craft this item');
@@ -45,8 +49,21 @@ export class RecipeFinder {
     // defined all buy price for each node;
     while (priceStack.length > 0) {
       const currentItem = priceStack.pop() as SearchableRecipeNode<Ingredient>; //can't be undefined -> force cast
+
       //todo : if shortcut already found -> skip
-      currentItem.nodeBuyPrice = await this.priceFinder.getBuyPrice(currentItem.data.item_id, currentItem.data.count);
+      let qtyToBuy = this.getQuantityToBuy(currentItem);
+      // need 2 item but the craft produce 5
+      if (qtyToBuy < 1) {
+        qtyToBuy = 1;
+        // TODO add overcomponent
+      }
+      //estimation
+      const buyPrice = await this.priceFinder.getBuyPrice(currentItem.data.item_id, qtyToBuy);
+
+
+      currentItem.nodeBuyPrice = buyPrice;
+      // add warning with sell price
+      // if( qtyToBuy /currentItem.parent.data.outputCountIfCraft ) < 1 we will overcraft
       priceStack.push(...currentItem.children);
       if (currentItem.children[0]) {
         shortcutCraftStack.push(currentItem.children[0])
@@ -63,10 +80,10 @@ export class RecipeFinder {
         if (craftPrice > 0) {
           const siblings = currentItem.parent.children;
           const childrenIngredient = map(siblings, 'data');
-          this.shortCutMap.set(currentItem.parent.data.item_id, childrenIngredient);
+          // get the data
           currentItem.parent.nodeBuyPrice = craftPrice;
+          this.shortCutMap.set(currentItem.parent.data.item_id, childrenIngredient);
         }
-
       }
     }
 
@@ -84,19 +101,29 @@ export class RecipeFinder {
   }
 
 
-  // parent ingredients ex : [A]
-  private recursiveShortcutResolution(ingredients: Ingredient[], finalList: Ingredient[] = []): Ingredient[] {
+  private getQuantityToBuy(currentItem: SearchableRecipeNode<Ingredient>) {
+    if (currentItem.parent) {
+      return (currentItem.data.count * currentItem.parent.data.count) / currentItem.parent.data.outputCountIfCraft;
+    }
+    return currentItem.data.count;
 
-    while (ingredients.length > 0) {
-      const ingredient = ingredients.pop() as Ingredient;
+  }
+
+// parent ingredients ex : [A]
+  private recursiveShortcutResolution(ingredients: Ingredient[]): Ingredient[] {
+    const initialIngredient = clone(ingredients);
+    const finalIngedient: Ingredient[] = [];
+
+    while (initialIngredient.length > 0) {
+      const ingredient = initialIngredient.shift() as Ingredient;
       const shortcut = this.shortCutMap.get(ingredient.item_id);
       if (shortcut) {
-        ingredients.push(...this.recursiveShortcutResolution(shortcut, finalList))
+        finalIngedient.push(...this.recursiveShortcutResolution(shortcut))
       } else {
-        finalList.push(ingredient)
+        finalIngedient.push(ingredient)
       }
     }
-    return finalList;
+    return finalIngedient;
   }
 
 

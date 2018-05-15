@@ -4,12 +4,15 @@ export interface Ingredient {
   item_id: number,
   count: number,
   isCraftable: boolean,
+  outputCountIfCraft: number
 }
 
 
 export interface Recipe {
   ingredients: Ingredient[];
   output_item_id: number;
+  output_item_count: number;
+  disciplines: string[]
   id: number;
   type: string
   chat_link: string;
@@ -37,6 +40,10 @@ const recipeSchema = new Schema({
     }
   ],
   output_item_id: {
+    type: Number
+  },
+  disciplines: [{type: String}],
+  output_item_count: {
     type: Number
   },
   id: {

@@ -7,7 +7,8 @@ import {ItemDAO} from "../../model";
   setup();
   const recipeFinder = new RecipeFinder();
   const itemDao = new ItemDAO();
-  const item = await itemDao.model.findOne({id:; ﻿9081
+  const id = 9081;
+  const item = await itemDao.model.findOne({id:; ﻿id
 })
   if (item) {
     await recipeFinder.getRecipeCraftPrice(item)
