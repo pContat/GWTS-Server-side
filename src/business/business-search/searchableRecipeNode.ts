@@ -1,17 +1,16 @@
 // transform treeNodeToSearchableTreeNode
 import {TreeNode} from "../../lib";
-import {Ingredient} from "../../model";
+import {BuyableIngredient} from "./recipeFinder";
 
 
-export class SearchableRecipeNode<Ingredient> extends TreeNode<Ingredient> {
-  public parent: SearchableRecipeNode<Ingredient> | undefined;
-  public nodeBuyPrice: number;
+export class SearchableRecipeNode<BuyableIngredient> extends TreeNode<BuyableIngredient> {
+  public parent: SearchableRecipeNode<BuyableIngredient> | undefined;
 
-  constructor(rootTreeNode: TreeNode<Ingredient>, parent: SearchableRecipeNode<Ingredient> | undefined = undefined) {
+
+  constructor(rootTreeNode: TreeNode<BuyableIngredient>, parent: SearchableRecipeNode<BuyableIngredient> | undefined = undefined) {
     super(rootTreeNode.data);
-    this.nodeBuyPrice = 0;
     this.parent = parent;
-    this.children = rootTreeNode.children.map((childTreeNode) => new SearchableRecipeNode<Ingredient>(childTreeNode, this))
+    this.children = rootTreeNode.children.map((childTreeNode) => new SearchableRecipeNode<BuyableIngredient>(childTreeNode, this))
   }
 
   // WTF TYPESCRIPT
@@ -22,6 +21,6 @@ export class SearchableRecipeNode<Ingredient> extends TreeNode<Ingredient> {
 
 }
 
-export function nodeToString(node: SearchableRecipeNode<Ingredient>): string {
-  return `${node.data.item_id } (${node.nodeBuyPrice} X ${node.data.count})`
+export function nodeToString(node: SearchableRecipeNode<BuyableIngredient>): string {
+  return `${node.data.item_id } (${node.data.buyPrice} X ${node.data.count})`
 }

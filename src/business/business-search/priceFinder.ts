@@ -1,8 +1,8 @@
-import {Ingredient, ItemDAO} from "../../model";
+import {ItemDAO} from "../../model";
 import {getCommerceListings, GWAPI, TreeNode} from "../../lib";
 import {without} from "lodash";
 import logger from "../../lib/logger/logger";
-import {SearchableRecipeNode} from "./searchableRecipeNode";
+import {BuyableIngredient} from "./recipeFinder";
 import Listing = GWAPI.Listing;
 
 
@@ -39,6 +39,7 @@ export class PriceFinder {
     let total = 0;
     let i = 0;
 
+    //TODO remove from listing : cache by recipe finder
     while (numberToBuy > 0) {
       const stackQuantity = itemListing.sells[i].quantity;
       const stackUnitPrice = itemListing.sells[i].unit_price;
@@ -66,8 +67,8 @@ export class PriceFinder {
   }
 
 
-  public getCraftPrice(item: TreeNode<Ingredient>): number {
-    const ingredientsPrice = item.children.map((child) => (<SearchableRecipeNode<Ingredient>> child).nodeBuyPrice);
+  public getCraftPrice(item: TreeNode<BuyableIngredient>): number {
+    const ingredientsPrice = item.children.map(child => child.data.buyPrice);
     const cantCraft = ingredientsPrice.find((price: number) => price === this.CANTBUY);
     if (cantCraft) {
       return this.CANTCRAFT
@@ -125,6 +126,9 @@ export class PriceFinder {
       ids: toRequestId
     }
   }
+}
 
+export function getTotalPrice(ingredientList: BuyableIngredient[]) {
+  return ingredientList.reduce((previousSomme, buyableIngredient: BuyableIngredient) => previousSomme + buyableIngredient.buyPrice, 0);
 }
 

@@ -6,10 +6,13 @@ export const defaultDealCriteria = {
   minBuyNumber: 200,     //Minimun of buyer
   //Maximun of distinct compo to craft the object (-1 : no limit)
   maxCompo: -1,
-  exceptRarity: ['Junk', 'Basic', 'Ascended', 'Legendary'],
-  exceptFlag: ['AccountBound', 'NoSell'],
-  exceptType: ['Container', 'CraftingMaterial ', 'Gathering', 'Bag'],
-};
+  doNotEvaluate: {
+    rarity: ['Junk', 'Basic', 'Ascended', 'Legendary'],
+    flags: ['AccountBound', 'NoSell'],
+    types: ['Container', 'CraftingMaterial ', 'Gathering'],
+  }
+
+} as DealCritera;
 
 export interface DealCritera {
   minFactoryMarge: number,
@@ -17,7 +20,10 @@ export interface DealCritera {
   minSellNumber: number,
   minBuyNumber: number,
   maxCompo: number,
-  exceptRarity: string[]
-  exceptFlag: string []
-  exceptType: string []
+  doNotEvaluate: {
+    rarity: string[]
+    flags: string []
+    types: string []
+  }
+
 }
