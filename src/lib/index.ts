@@ -1,6 +1,0 @@
-export * from "./gwApi/gwApiHttpHelper"
-export * from "./gwApi/gwApiModel"
-export * from "./gwApi/gwApiToModelConverter"
-export * from "./logger/logger"
-export * from "./mongo/mongoConnexion"
-export * from "./recipeTree/recipeTree"
