@@ -1,46 +1,100 @@
 /*TODO :
-- log search time
 - add worker
 - add Redis for cache and message broker
 - store best deal
-- persist full recipe (expand mode)
 - use inventory API
-
 */
 
-
-import {DealCritera, defaultDealCriteria} from "./conf/deal-critera";
-import {RecipeFinderService} from "./recipe-finder";
-import {Injectable} from "@nestjs/common";
-import {ItemDao} from "../common/service/item.dao";
-import {AsyncUtils} from "../core/utils";
+import {defaultDealCriteria} from '../conf/deal-critera';
+import {Injectable, Logger} from '@nestjs/common';
+import {ItemDao} from '../../common/service/item.dao';
+import {AsyncUtils, FileUtils, TimeUtils} from '../../core/utils';
+import {RecipeFinderService} from './recipe-finder.service';
+import {DealCritera} from '../type';
+import {FlippingFinderService} from './flipping-finder.service';
+import {TradeListingService} from './trade-listing.service';
 
 @Injectable()
 export class DealFinder {
-
-  private commerceListingCache: Map<number, any>;
   private configuration: DealCritera;
+  logger = new Logger(DealFinder.name);
 
-  constructor(private readonly itemDao : ItemDao, private readonly recipeFinder : RecipeFinderService) {
-    // todo : move this to dedicated class or redis
-    this.commerceListingCache = new Map<number, any>();
+  constructor(
+    private readonly itemDao: ItemDao,
+    private readonly flippingFinder: FlippingFinderService,
+    private readonly tradeListingService: TradeListingService,
+    private readonly recipeFinder: RecipeFinderService,
+  ) {
     this.configuration = defaultDealCriteria;
   }
 
-
   async findDeal() {
-    const test = await this.matchConfiguration();
-    console.log(test.length, 'item to evaluate');
+    const matchingCriteriaItem = await this.matchConfiguration();
+    console.log(matchingCriteriaItem.length, 'item to evaluate');
 
+    const start = TimeUtils.clock();
 
-    const final = await AsyncUtils.pseries(test, item => this.recipeFinder.getRecipeCraftPrice(item));
-    // console.log(final.length, 'deal found');
-    // todo check buy sell ratio
-    console.log(final)
+    // no more parallelBatch , the timer is api side
+    /*
+    const shouldCraftItemPromise =  AsyncUtils.parallelBatch(matchingCriteriaItem,async (item) => {
+       if(await this.doesMatchMinSellBuyRatio(item.id)){
+         this.logger.log(`no minimum buy/sale requirement for ${item.id}`);
+         return;
+       }
+      return this.recipeFinder.getRecipeCraftList(item);
+    }, 100);
+    const flipPromise =  AsyncUtils.parallelBatch(matchingCriteriaItem,async (item) => {
+      if(await this.doesMatchMinSellBuyRatio(item.id)){
+        this.logger.log(`no minimum buy/sale requirement for ${item.id}`);
+        return;
+      }
+      return this.flippingFinder.shouldFlipItem(item.id);
+    }, 100);
+    const [shouldCraftItem,flip] = await Promise.all([shouldCraftItemPromise,flipPromise]);
+    */
+
+    const craftList = [];
+    const flipList = [];
+    // todo : change this to improve
+    const notTooMuch = await AsyncUtils.parallelBatch(
+      matchingCriteriaItem,
+      async item => {
+        if ( !(await this.doesMatchMinSellBuyRatio(item.id))) {
+          this.logger.log(`no minimum buy/sale requirement for ${item.id}`);
+          return;
+        }
+        const [craft, flip] = await Promise.all([
+          this.recipeFinder.getRecipeCraftList(item),
+          this.flippingFinder.shouldFlipItem(item),
+        ]);
+        if (craft) {
+          craftList.push(craft);
+        }
+        if (flip) {
+          flipList.push(flip);
+        }
+      },
+      100,
+    );
+
+    const end = TimeUtils.clock(start);
+    this.logger.log(`end proccess in ${end}`);
+
+    const content = {
+      craft: craftList,
+      flip: flipList,
+    };
+
+    await FileUtils.createJsonFile(content, './export.json');
+  }
+
+  async doesMatchMinSellBuyRatio(itemId: number) {
+    const listing = await this.tradeListingService.getListing(itemId);
+    return listing.buys.length > this.configuration.minimumNumberOfBuy &&
+        listing.sells.length > this.configuration.minimumNumberOfSale;
   }
 
   async matchConfiguration() {
-    return await this.itemDao.getMatchingCriteriaItem(this.configuration)
+    return await this.itemDao.getMatchingCriteriaItem(this.configuration);
   }
-
 }

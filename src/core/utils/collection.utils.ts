@@ -31,7 +31,7 @@ export class CollectionUtils {
     // Loop through the keys and for each one retrieve proper document. For not
     // existing documents generate an error.
     return keys.map(key => {
-      return docsMap.get(key) || new Error(typeof error === 'function' ? error(key) : error);
+      return docsMap.get(key) || undefined
     });
   }
 }

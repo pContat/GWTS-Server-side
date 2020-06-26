@@ -1,6 +1,8 @@
 import { chunk , clone} from 'lodash';
+import {Observable} from "rxjs";
 
 export type AsyncFunction = (...args: any[]) => Promise<any>;
+export type ObservableFunction = (...args: any[]) => Observable<any>;
 export type TypedAsyncFunction<T> = (...args: any[]) => Promise<T>;
 
 export class AsyncUtils {
@@ -17,6 +19,12 @@ export class AsyncUtils {
     }, Promise.resolve());
   }
 
+  static async asyncForEach(array: any[], callback: AsyncFunction) {
+    for (let index = 0; index < array.length; index++) {
+      await callback(array[index], index, array);
+    }
+  }
+
   static async pAll(factoryList: AsyncFunction[]) {
     const pendingPromiseList = factoryList.map(asyncFunction =>
       asyncFunction(),
@@ -24,9 +32,9 @@ export class AsyncUtils {
     return await Promise.all(pendingPromiseList);
   }
 
-  static async parallelBatch(
-    allParameters: any[],
-    callBack: AsyncFunction,
+  static async parallelBatch<T>(
+    allParameters: T[],
+    callBack: (value: T, index : number, array : T[]) => Promise<any>,
     batchSize: number,
   ) {
     const finalResult = [];

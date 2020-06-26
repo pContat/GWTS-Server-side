@@ -5,8 +5,6 @@ import {Config} from "knex";
 import * as config from '../../../knexfile';
 
 
-const databaseConf = require('./database');
-
 export interface EnvConfig {
   [key: string]: string;
 }
@@ -40,9 +38,7 @@ export class ConfigService {
   }
 
   get databaseConfiguration(): Config {
-
     return this.isProduction ? config.production : config.development;
-
   }
 
   get corsConfiguration() {

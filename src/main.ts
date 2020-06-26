@@ -6,6 +6,7 @@ import {NestApplicationOptions} from "@nestjs/common";
 import morgan = require("morgan");
 import {ImportService} from "./businness-import/import.service";
 import {MigrationsService} from "./database/services/migration.service";
+import {DealFinder} from "./business-search/service/deal-finder.service";
 
 async function bootstrap() {
 
@@ -32,6 +33,11 @@ async function bootstrap() {
     appLogger.log(`import done`);
 
   }
+
+
+  // todo : comment that
+  const dealService = app.get(DealFinder);
+  await dealService.findDeal();
 
   await app.listen(configurationService.expressPort);
 }

@@ -24,7 +24,7 @@ exports.up = async knex => {
       table.float('vendor_value').notNull();
       table.string('icon_url'); //canbe null
       table.integer('level').notNull();
-      table.specificType('flags', 'character varying(20)[]'); //array
+      table.specificType('flags', 'text[]'); //array
     });
 };
 

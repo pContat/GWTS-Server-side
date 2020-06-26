@@ -10,5 +10,7 @@ export class TreeNode<T> {
         this.data = data;
         this.children = [];
     }
+
+
 }
 

@@ -81,6 +81,7 @@ export class ObjectionCrudDao<TModel extends BaseModel>
     return await baseQuery.execute();
   }
 
+  // todo add dataloader
   public async findById(
     id: number | string | number[] | string[],
     option: ObjectionQueryOption = {},
