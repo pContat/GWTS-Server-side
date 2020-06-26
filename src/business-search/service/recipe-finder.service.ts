@@ -3,7 +3,7 @@ import { TreeNode} from "../business-receipt/type";
 import {getAllItemId} from "../business-receipt/ingredient-tree";
 import {ItemDao} from "../common/service/item.dao";
 import {Ingredient } from "../common/type";
-import {Logger} from "@nestjs/common";
+import {Injectable, Logger} from "@nestjs/common";
 import {ItemModel} from "../common/model/item-model";
 import {nodeToString, SearchableRecipeNode} from "./searchable-recipe-node";
 import {printTree} from "../business-receipt/print-tree";
@@ -25,8 +25,9 @@ export interface RecipeResult {
 /**
  * Find the best recipe to craft the given item
  */
-export class RecipeFinder {
-  logger = new Logger(RecipeFinder.name);
+@Injectable()
+export class RecipeFinderService {
+  logger = new Logger(RecipeFinderService.name);
   readonly DONTCRAFT = -3;
   private commerceListingCache: Map<number, any>;
   private readonly shortCutMap: Map<number, BuyableIngredient[]>;

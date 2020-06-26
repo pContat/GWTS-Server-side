@@ -9,8 +9,8 @@
 */
 
 
-import {DealCritera, defaultDealCriteria} from "./deal-critera";
-import {RecipeFinder} from "./recipe-finder";
+import {DealCritera, defaultDealCriteria} from "./conf/deal-critera";
+import {RecipeFinderService} from "./recipe-finder";
 import {Injectable} from "@nestjs/common";
 import {ItemDao} from "../common/service/item.dao";
 import {AsyncUtils} from "../core/utils";
@@ -21,7 +21,7 @@ export class DealFinder {
   private commerceListingCache: Map<number, any>;
   private configuration: DealCritera;
 
-  constructor(private readonly itemDao : ItemDao, private readonly recipeFinder : RecipeFinder) {
+  constructor(private readonly itemDao : ItemDao, private readonly recipeFinder : RecipeFinderService) {
     // todo : move this to dedicated class or redis
     this.commerceListingCache = new Map<number, any>();
     this.configuration = defaultDealCriteria;
@@ -33,8 +33,9 @@ export class DealFinder {
     console.log(test.length, 'item to evaluate');
 
 
-    const final = await AsyncUtils.pseries(test, this.recipeFinder.getRecipeCraftPrice.bind(this.recipeFinder));
+    const final = await AsyncUtils.pseries(test, item => this.recipeFinder.getRecipeCraftPrice(item));
     // console.log(final.length, 'deal found');
+    // todo check buy sell ratio
     console.log(final)
   }
 
