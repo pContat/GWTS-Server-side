@@ -1,6 +1,5 @@
+import { PathLike, readFile, writeFile } from 'fs';
 import { first, includes, isNil, isString, last } from 'lodash';
-
-import {PathLike, readFile, writeFile} from 'fs';
 
 const junkFiles = [
   '.DS_Store',
@@ -71,19 +70,17 @@ export class FileUtils {
     return undefined;
   }
 
-
-  static async createJsonFile(content : any , path : string){
+  static async createJsonFile(content: any, path: string) {
     // stringify JSON Object
     const jsonContent = JSON.stringify(content);
 
-    return new Promise( (resolve, reject) => {
-      writeFile(path, jsonContent, 'utf8',  (err) => {
+    return new Promise((resolve, reject) => {
+      writeFile(path, jsonContent, 'utf8', err => {
         if (err) {
           reject(err);
         }
         resolve();
       });
-    })
-
+    });
   }
 }

@@ -1,10 +1,7 @@
-import {BaseModel} from "../../database/models/base.model";
-import {RecipeModel} from "./recipe-model";
-import {Model} from "objection";
-import {Ingredient} from "../type";
-
-
-
+import { BaseModel } from '../../database/models/base.model';
+import { RecipeModel } from './recipe-model';
+import { Model } from 'objection';
+import { Ingredient } from '../type';
 
 export class ItemModel extends BaseModel {
   static tableName = 't_e_item';
@@ -36,12 +33,9 @@ export class ItemModel extends BaseModel {
         modelClass: RecipeModel,
         join: {
           from: `${ItemModel.tableName}.from_recipe_id`,
-          to: `${RecipeModel.tableName}.${RecipeModel.idColumn}`
-        }
+          to: `${RecipeModel.tableName}.${RecipeModel.idColumn}`,
+        },
       },
     };
   }
-
 }
-
-

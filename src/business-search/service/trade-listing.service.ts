@@ -1,31 +1,29 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AsyncUtils, CollectionUtils } from '../../core/utils';
-import { without, first } from 'lodash';
-
-import { CacheService } from '../../core/cache/cache.service';
-import { GWApiService } from '../../gw-api/gw-http-api.service';
-import { GWAPI } from '../../gw-api/gw-api-type';
-import { ItemDao } from '../../common/service/item.dao';
-import Listing = GWAPI.Listing;
+import { isNil } from '@nestjs/common/utils/shared.utils';
+import * as DataLoader from 'dataloader';
+import { first, without } from 'lodash';
 import { getAllItemId } from '../../business-receipt/ingredient-tree';
+import { ItemDao } from '../../common/service/item.dao';
+import { CacheService } from '../../core/cache/cache.service';
+import { AsyncUtils } from '../../core/utils';
+import { GWAPI } from '../../gw-api/gw-api-type';
+import { GWApiService } from '../../gw-api/gw-http-api.service';
 import { SearchableRecipeNode } from '../searchable-recipe-node';
 
-import * as DataLoader from 'dataloader';
-import {isNil} from "@nestjs/common/utils/shared.utils";
+import Listing = GWAPI.Listing;
 
 // will handle the listing cache and batch request with dataloader
 @Injectable()
 export class TradeListingService {
   logger = new Logger(TradeListingService.name);
 
-  readonly byIdsLoader : DataLoader<number, GWAPI.Listing>;
+  readonly byIdsLoader: DataLoader<number, GWAPI.Listing>;
 
   constructor(
     private readonly cacheService: CacheService,
     private readonly itemDao: ItemDao,
     private readonly gwApi: GWApiService,
   ) {
-
     this.byIdsLoader = new DataLoader(async (keys: number[]) => {
       // use this instead method instead of use cache false to get unique id in keys
       this.byIdsLoader.clearAll();
@@ -33,7 +31,7 @@ export class TradeListingService {
         const response = await this.gwApi.getCommerceListing(first(keys));
         return [response];
       }
-      return  await this.gwApi.getCommerceListings(keys);
+      return await this.gwApi.getCommerceListings(keys);
     });
   }
 
@@ -42,10 +40,12 @@ export class TradeListingService {
     const listings = await this.gwApi.getCommerceListings(missingIds);
 
     // not found handler for many key
-    const promiseList = ids.map(  (value : number, index : number ) => {
+    const promiseList = ids.map((value: number, index: number) => {
       const itemId = ids[index];
-      let listing = listings[index] ;
-      return (isNil(listing)) ? this.listingNotFoundHandler(itemId) : Promise.resolve(listing);
+      const listing = listings[index];
+      return isNil(listing)
+        ? this.listingNotFoundHandler(itemId)
+        : Promise.resolve(listing);
     });
     const listingList = await Promise.all(promiseList);
     await this.putListingsInCache(listingList);
@@ -82,12 +82,10 @@ export class TradeListingService {
   }
 
   // todo : use mset
-  private async putListingsInCache( listings: Listing[]) {
+  private async putListingsInCache(listings: Listing[]) {
     return await AsyncUtils.asyncForEach(listings, listing => {
       return this.cacheService.set(this.listingCacheKey(listing.id), listing);
     });
-
-
   }
 
   private async listingNotFoundHandler(itemId: number) {
@@ -118,5 +116,4 @@ export class TradeListingService {
   private listingCacheKey(id: number) {
     return `listing_${id}`;
   }
-
 }

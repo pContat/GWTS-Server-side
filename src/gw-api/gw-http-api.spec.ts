@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
-import {GWApiService} from "./gw-http-api.service";
-import {HttpModule} from "@nestjs/common";
-import {ConfigModule} from "../core/config/config.module";
+import { GWApiService } from './gw-http-api.service';
+import { HttpModule } from '@nestjs/common';
+import { ConfigModule } from '../core/config/config.module';
 
 describe('GW API', () => {
   let gwApiService: GWApiService;
@@ -9,12 +9,10 @@ describe('GW API', () => {
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
       providers: [GWApiService],
-      imports: [  ConfigModule , HttpModule],
+      imports: [ConfigModule, HttpModule],
     }).compile();
 
-    gwApiService = moduleRef.get<GWApiService>(
-        GWApiService,
-    );
+    gwApiService = moduleRef.get<GWApiService>(GWApiService);
   });
 
   describe('handle non buyable object', () => {
@@ -29,7 +27,7 @@ describe('GW API', () => {
 
     it('multi', async () => {
       try {
-        const result = await gwApiService.getCommerceListings([70851,70852]);
+        const result = await gwApiService.getCommerceListings([70851, 70852]);
         expect(result.length).toEqual(2);
         expect(result[0]).toBeUndefined();
       } catch (e) {
@@ -37,6 +35,4 @@ describe('GW API', () => {
       }
     });
   });
-
-
 });

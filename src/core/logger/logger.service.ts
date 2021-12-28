@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import * as morgan from 'morgan';
 import {
   createLogger,
   format,
@@ -6,7 +7,6 @@ import {
   transports,
 } from 'winston';
 import { ConfigService } from '../config/config.service';
-import * as morgan from 'morgan';
 import moment = require('moment');
 
 @Injectable()

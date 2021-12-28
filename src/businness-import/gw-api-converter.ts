@@ -1,8 +1,8 @@
 import { Logger } from '@nestjs/common';
+import { Ingredient, Item, Recipe } from '../common/type';
 import { GWAPI } from '../gw-api/gw-api-type';
 import ItemDetail = GWAPI.ItemDetail;
 import RecipeDetail = GWAPI.RecipeDetail;
-import { Ingredient, Item, Recipe } from '../common/type';
 import ApiIngredient = GWAPI.Ingredient;
 
 const logger = new Logger('GWApiConverter');

@@ -1,4 +1,3 @@
-export * from './date.utils';
 export * from './file.utils';
 export * from './lenght.utils';
 export * from './async.utils';

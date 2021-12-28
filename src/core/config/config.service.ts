@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import * as Joi from 'joi';
 import * as dotenv from 'dotenv';
-import {Config} from "knex";
+import * as Joi from 'joi';
+import { Config } from 'knex';
 import * as config from '../../../knexfile';
-
 
 export interface EnvConfig {
   [key: string]: string;

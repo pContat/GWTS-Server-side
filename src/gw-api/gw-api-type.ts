@@ -1,6 +1,4 @@
 export namespace GWAPI {
-
-
   export interface Details {
     type: string;
     damage_type: string;
@@ -31,7 +29,6 @@ export namespace GWAPI {
     details: Details;
   }
 
-
   export interface Ingredient {
     item_id: number;
     count: number;
@@ -56,14 +53,13 @@ export namespace GWAPI {
     sells: Sell[];
   }
 
-
   export interface Price {
     id: number;
     whitelisted: boolean;
     buys: {
       quantity: number;
       unit_price: number;
-    }
+    };
     sells: {
       quantity: number;
       unit_price: number;
@@ -81,6 +77,4 @@ export namespace GWAPI {
     unit_price: number;
     quantity: number;
   }
-
-
 }

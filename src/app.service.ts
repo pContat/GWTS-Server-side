@@ -11,7 +11,7 @@ export class AppService {
      */
   }
 
-  recipeBuilder(){
+  recipeBuilder() {
     /*(async function () {
 
       const recipeFinder = new RecipeFinder();

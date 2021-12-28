@@ -4,9 +4,8 @@ import { ConfigService } from './config.service';
 @Global()
 @Module({
   providers: [ConfigService],
-  exports: [ConfigService]
+  exports: [ConfigService],
 })
 export class ConfigModule {}
-
 
 // need to be injected in several service

@@ -1,15 +1,23 @@
-import {chunk, flatten, isEmpty} from 'lodash';
-import {HttpService, Injectable, Logger} from '@nestjs/common';
-import {GWAPI} from './gw-api-type';
-import {bufferCount, concatMap, delay, filter, first, flatMap, map, share,} from 'rxjs/operators';
-import {of, Subject} from 'rxjs';
-import {CollectionUtils, ObservableFunction} from '../core/utils';
+import { chunk, flatten, isEmpty } from 'lodash';
+import { HttpService, Injectable, Logger } from '@nestjs/common';
+import { GWAPI } from './gw-api-type';
+import {
+  bufferCount,
+  concatMap,
+  delay,
+  filter,
+  first,
+  flatMap,
+  map,
+  share,
+} from 'rxjs/operators';
+import { of, Subject } from 'rxjs';
+import { CollectionUtils, ObservableFunction } from '../core/utils';
 import ReceiptDetail = GWAPI.RecipeDetail;
 import ItemDetail = GWAPI.ItemDetail;
 import Listing = GWAPI.Listing;
 import Price = GWAPI.Price;
 import RecipeDetail = GWAPI.RecipeDetail;
-
 
 // todo add debug validator to check how many time an item is called
 @Injectable()
@@ -24,20 +32,24 @@ export class GWApiService {
   private readonly prices = `${this.baseURL}/commerce/prices`;
   private readonly maxIdPerRequest = 15; //more id per request seams too much
 
-
   constructor(private readonly httpService: HttpService) {}
 
   static requestCount = 0; // used as id
-  public pendingRequest = new Subject<{ id: number; callback: ObservableFunction }>();
+  public pendingRequest = new Subject<{
+    id: number;
+    callback: ObservableFunction;
+  }>();
   // no more than 10 req / s
   public httpRequestPoolExecutor = this.pendingRequest.asObservable().pipe(
     bufferCount(1),
     concatMap(data => of(data).pipe(delay(200))),
     flatMap(e => e), // or mergeAll() or concatAll()
-    flatMap( el => {
-      return el.callback().pipe(map( response => {
-        return { id : el.id , response}
-      }));
+    flatMap(el => {
+      return el.callback().pipe(
+        map(response => {
+          return { id: el.id, response };
+        }),
+      );
     }),
     share(),
   );
@@ -47,25 +59,21 @@ export class GWApiService {
     return new Promise((resolve, reject) => {
       const callback = () => {
         this.logger.debug(`do call ${requestId} : ${url}`);
-        return this.httpService
-          .get(this.appendLangParam(url))
-          .pipe(
-            first(),
-            map(el => el.data),
-          )
+        return this.httpService.get(this.appendLangParam(url)).pipe(
+          first(),
+          map(el => el.data),
+        );
       };
 
       const notifier = this.httpRequestPoolExecutor
         .pipe(
           filter(el => el.id === requestId),
           map(el => el.response as T),
-            first(),
+          first(),
         )
-        .subscribe( resolve, reject);
+        .subscribe(resolve, reject);
 
       this.pendingRequest.next({ id: requestId, callback });
-
-
     });
   }
 
@@ -113,23 +121,25 @@ export class GWApiService {
   async getCommerceListings(itemsIds: number[]): Promise<Listing[]> {
     // splite the request into multiple request of 4 to avoid partial content status
     const requestUriList = this.splitRequest(itemsIds);
-    const requestPromise = requestUriList.map(idList => this.handleAllListing(idList));
+    const requestPromise = requestUriList.map(idList =>
+      this.handleAllListing(idList),
+    );
     const responseArray: Listing[][] = await Promise.all(requestPromise);
     //cflattenArray.forEach(sortListingByPrice);
     // suppose to be sorted from documentation https://wiki.guildwars2.com/wiki/API:2/commerce/listings
     return flatten(responseArray);
   }
 
-  private async handleAllListing(ids : number[]){
+  private async handleAllListing(ids: number[]) {
     try {
-      const joinIds  = this.buildIdParams(ids);
-      const result =  await this.get<Listing[]>(this.listings + joinIds);
+      const joinIds = this.buildIdParams(ids);
+      const result = await this.get<Listing[]>(this.listings + joinIds);
       // warning the api can ommit to return value if it considere a bad item id
       if (result.length === ids.length) {
         return result;
       }
       return CollectionUtils.ensureOrder({
-        keys : ids,
+        keys: ids,
         docs: result,
         prop: 'id',
       });
@@ -142,31 +152,30 @@ export class GWApiService {
     }
   }
 
-
   getCommercePrice(itemId: number): Promise<Price> {
     return this.get(`${this.prices}/${itemId}`);
   }
 
   async getCommerceListing(itemId: number): Promise<Listing> {
-     try {
-       return  await this.get<Listing>(`${this.listings}/${itemId}`);
+    try {
+      return await this.get<Listing>(`${this.listings}/${itemId}`);
     } catch (error) {
-       if (error.response.status === 404) {
-         this.logger.error(`no listing found item ${itemId}`);
-         return undefined;
-       }
-       throw error;
-     }
+      if (error.response.status === 404) {
+        this.logger.error(`no listing found item ${itemId}`);
+        return undefined;
+      }
+      throw error;
+    }
   }
 
   sortListingByPrice(itemListing: Listing) {
     // croissant
     itemListing.buys = itemListing.buys.sort(
-        (x, y) => x.unit_price - y.unit_price,
+      (x, y) => x.unit_price - y.unit_price,
     );
     // decroissant
     itemListing.sells = itemListing.sells.sort(
-        (x, y) => y.unit_price - x.unit_price,
+      (x, y) => y.unit_price - x.unit_price,
     );
   }
 
@@ -184,8 +193,7 @@ export class GWApiService {
 
   private appendLangParam(url: string) {
     const lastArg =
-        url.indexOf('?') === -1 ? `?lang=${this.lang}` : `&lang=${this.lang}`;
+      url.indexOf('?') === -1 ? `?lang=${this.lang}` : `&lang=${this.lang}`;
     return url + lastArg;
   }
-
 }

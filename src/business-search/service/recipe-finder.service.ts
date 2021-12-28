@@ -1,14 +1,13 @@
-import { clone, map, isEmpty , isNil} from 'lodash';
-import { TreeNode } from '../../business-receipt/type';
-import { getAllItemId } from '../../business-receipt/ingredient-tree';
 import { Injectable, Logger } from '@nestjs/common';
-import { ItemModel } from '../../common/model/item-model';
-import { SearchableRecipeNode } from '../searchable-recipe-node';
-import { getTotalPrice, PriceFinder } from './price-finder.service';
-import { BuyableIngredient, RecipeResult } from '../type';
+import { clone, isEmpty, isNil, map } from 'lodash';
 import { printRecipeTree } from '../../business-receipt/print-tree';
+import { TreeNode } from '../../business-receipt/type';
+import { ItemModel } from '../../common/model/item-model';
+import { CacheService } from '../../core/cache/cache.service';
+import { SearchableRecipeNode } from '../searchable-recipe-node';
+import { BuyableIngredient, RecipeResult } from '../type';
+import { getTotalPrice, PriceFinder } from './price-finder.service';
 import { TradeListingService } from './trade-listing.service';
-import {CacheService} from "../../core/cache/cache.service";
 
 /**
  * Find the best recipe to craft the given item
@@ -22,26 +21,28 @@ export class RecipeFinderService {
   constructor(
     private readonly priceFinder: PriceFinder,
     private readonly tradeListingService: TradeListingService,
-    private readonly cacheService : CacheService
-  ) {
-  }
+    private readonly cacheService: CacheService,
+  ) {}
 
   // if a craft has been found better than buying
-  private shortCutCacheKey(itemId: number){
-    return `shortcut_${itemId}`
+  private shortCutCacheKey(itemId: number) {
+    return `shortcut_${itemId}`;
   }
 
   // save price already computed
-  private evaluationCacheKey(itemId: number){
-    return `eval_${itemId}`
+  private evaluationCacheKey(itemId: number) {
+    return `eval_${itemId}`;
   }
 
-  private setShortcut(itemId, buyableList : BuyableIngredient[]){
-    return this.cacheService.set(this.shortCutCacheKey(itemId), buyableList) ;
+  private setShortcut(itemId, buyableList: BuyableIngredient[]) {
+    return this.cacheService.set(this.shortCutCacheKey(itemId), buyableList);
   }
 
-  public getShortCut(itemId : number): Promise<BuyableIngredient[] | undefined>{
-    return this.cacheService.get<BuyableIngredient[]>(this.shortCutCacheKey(itemId), () => undefined) ;
+  public getShortCut(itemId: number): Promise<BuyableIngredient[] | undefined> {
+    return this.cacheService.get<BuyableIngredient[]>(
+      this.shortCutCacheKey(itemId),
+      () => undefined,
+    );
   }
 
   public async getRecipeCraftList(
@@ -67,7 +68,6 @@ export class RecipeFinderService {
     // todo : do not bother if item do not match min sell / buy
     // we do not want to create an item that does not sell
 
-
     // the price of the item if we want to buy it
     const initialItemPrice = await this.priceFinder.getBuyPrice(item.id, 1);
 
@@ -81,8 +81,10 @@ export class RecipeFinderService {
       // if another already get the price do not bother
       // the shortcut will exist or not if not interesting
       const existingPrice = await this.getEval(currentItem.data.itemId);
-      if(!isNil(existingPrice)){
-        this.logger.debug(`prevent re evaluation of item ${currentItem.data.itemId}`);
+      if (!isNil(existingPrice)) {
+        this.logger.debug(
+          `prevent re evaluation of item ${currentItem.data.itemId}`,
+        );
         continue;
       }
       currentItem.data.buyPrice = await this.getBuyPrice(currentItem);
@@ -108,7 +110,7 @@ export class RecipeFinderService {
         );
 
         // do not wait, not worse it
-        this.setEval(currentItem.parent.data.itemId,craftPrice);
+        this.setEval(currentItem.parent.data.itemId, craftPrice);
 
         currentItem.parent.data.craftPrice = craftPrice;
 
@@ -134,7 +136,7 @@ export class RecipeFinderService {
       }
     }
 
-    this.logger.debug("\r\n" +printRecipeTree(recipeTree));
+    this.logger.debug('\r\n' + printRecipeTree(recipeTree));
     // step3 : final price
     const finalIngredientList = await this.recursiveShortcutResolution([
       recipeTree.data,
@@ -148,7 +150,7 @@ export class RecipeFinderService {
       finalPrice: getTotalPrice(finalIngredientList),
       initialPrice: initialItemPrice,
       ingredients: finalIngredientList,
-      itemId : item.id
+      itemId: item.id,
     } as RecipeResult;
   }
 
@@ -163,7 +165,9 @@ export class RecipeFinderService {
       const ingredient = initialIngredient.shift() as BuyableIngredient;
       const shortcut = await this.getShortCut(ingredient.itemId);
       if (shortcut) {
-        finalIngredient.push(...await this.recursiveShortcutResolution(shortcut));
+        finalIngredient.push(
+          ...(await this.recursiveShortcutResolution(shortcut)),
+        );
       } else {
         finalIngredient.push(ingredient);
       }
@@ -193,18 +197,20 @@ export class RecipeFinderService {
     return currentItem.data.count;
   }
 
-
-
-  private setEval(itemId, price : number){
-    return this.cacheService.set(this.evaluationCacheKey(itemId), price) ;
+  private setEval(itemId, price: number) {
+    return this.cacheService.set(this.evaluationCacheKey(itemId), price);
   }
 
-  public getEval(itemId : number): Promise<number>{
-    return this.cacheService.get<number>(this.evaluationCacheKey(itemId), () => undefined) ;
+  public getEval(itemId: number): Promise<number> {
+    return this.cacheService.get<number>(
+      this.evaluationCacheKey(itemId),
+      () => undefined,
+    );
   }
 
-  private async getBuyPrice(currentItem: SearchableRecipeNode<BuyableIngredient>) {
-
+  private async getBuyPrice(
+    currentItem: SearchableRecipeNode<BuyableIngredient>,
+  ) {
     let quantityToBuy = this.getQuantityToBuy(currentItem);
     // need 2 item but the parent craft can produce 5 item
     if (quantityToBuy < 1) {
@@ -214,10 +220,8 @@ export class RecipeFinderService {
       // if( qtyToBuy /currentItem.parent.data.outputCountIfCraft ) < 1 we will have oversupply
     }
     return await this.priceFinder.getBuyPrice(
-        currentItem.data.itemId,
-        quantityToBuy,
+      currentItem.data.itemId,
+      quantityToBuy,
     );
-
-
   }
 }

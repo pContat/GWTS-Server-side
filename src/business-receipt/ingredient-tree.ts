@@ -1,6 +1,28 @@
-import { TreeNode } from './type';
 import { Ingredient, Recipe } from '../common/type';
+import { TreeNode } from './type';
 
+function recipeToNodes(recipe: Recipe, quantity = 1): TreeNode<Ingredient>[] {
+  return recipe.ingredients.map(ingredient => {
+    const data = {
+      count: ingredient.count * quantity,
+      itemId: ingredient.itemId,
+      isCraftable: ingredient.isCraftable,
+      outputCountIfCraft: 1,
+    };
+    return new TreeNode<Ingredient>(data);
+  });
+}
+
+function createRootTree(recipeForItem: Recipe): TreeNode<Ingredient> {
+  const data = {
+    count: 1,
+    itemId: recipeForItem.outputItemId,
+    isCraftable: true,
+  } as Ingredient;
+  const root = new TreeNode<Ingredient>(data); // 1 : output item id
+  root.children.push(...recipeToNodes(recipeForItem)); //do not break reference
+  return root;
+}
 
 // TODO: can use cache to improve creation time : priority low
 export function buildRecipeTree(
@@ -38,31 +60,4 @@ export function getAllItemId(root: TreeNode<Ingredient>): number[] {
     }
   }
   return Array.from(new Set(ids));
-}
-
-function createRootTree(recipeForItem: Recipe): TreeNode<Ingredient> {
-  const data = {
-    count: 1,
-    itemId : recipeForItem.outputItemId,
-    isCraftable: true,
-  } as Ingredient;
-  const root = new TreeNode<Ingredient>(data); // 1 : output item id
-  root.children.push(...recipeToNodes(recipeForItem)); //do not break reference
-  return root;
-}
-
-
-function recipeToNodes(
-  recipe: Recipe,
-  quantity = 1,
-): TreeNode<Ingredient>[] {
-  return recipe.ingredients.map(ingredient => {
-    const data = {
-      count: ingredient.count * quantity,
-      itemId: ingredient.itemId,
-      isCraftable: ingredient.isCraftable,
-      outputCountIfCraft: 1,
-    };
-    return new TreeNode<Ingredient>(data);
-  });
 }

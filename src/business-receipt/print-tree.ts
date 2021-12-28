@@ -1,12 +1,12 @@
-import {GetChildren, PrintNode} from "./type";
-import {nodeToString} from "../business-search/searchable-recipe-node";
+import { nodeToString } from '../business-search/searchable-recipe-node';
+import { GetChildren, PrintNode } from './type';
 
 function printTree<T>(
   initialTree: T,
   printNode: PrintNode<T>,
   getChildren: GetChildren<T>,
 ) {
-  let content = "";
+  let content = '';
 
   function printBranch(tree: any, branch: any) {
     const isGraphHead = branch.length === 0;
@@ -22,7 +22,7 @@ function printTree<T>(
 
     if (typeof toPrint === 'string') {
       // add accumulator here
-      content+=`${branch}${branchHead}${toPrint} \r\n `;
+      content += `${branch}${branchHead}${toPrint} \r\n `;
       //console.log(`${branch}${branchHead}${toPrint}`);
     }
 
@@ -37,15 +37,16 @@ function printTree<T>(
     const lastBranch = baseBranch + '└─';
 
     children.forEach((child, index) => {
-      printBranch(child, children.length - 1 === index ? lastBranch : nextBranch);
+      printBranch(
+        child,
+        children.length - 1 === index ? lastBranch : nextBranch,
+      );
     });
   }
   printBranch(initialTree, '');
-  return content
+  return content;
 }
 
 export function printRecipeTree(recipeTree) {
-  return printTree(recipeTree, nodeToString,
-      node => node.children);
-
+  return printTree(recipeTree, nodeToString, node => node.children);
 }

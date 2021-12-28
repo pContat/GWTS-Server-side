@@ -7,7 +7,5 @@ export class BaseModel extends Model {
 
   static idColumn = 'id';
 
-  static isTraceable = false
-
-
+  static isTraceable = false;
 }

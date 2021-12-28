@@ -1,16 +1,16 @@
-import { Page, PaginationArguments } from './pagination.type';
 import { BaseModel } from '../models/base.model';
+import { Page, PaginationArguments } from './pagination.type';
 
 export type IdValue = string | number | string[] | number[];
 
 export interface CrudDao<T extends BaseModel> {
-  readonly idColumn: string | string[];
+  readonly idColumn: string | string[];
 
   findAll(options: PaginationArguments): Promise<T[]>;
 
   paginate(options: PaginationArguments): Promise<Page<T>>;
 
-  findById(id: IdValue ): Promise<T | undefined>;
+  findById(id: IdValue): Promise<T | undefined>;
 
   findByIds(ids: IdValue[]): Promise<T[]>;
 

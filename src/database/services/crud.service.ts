@@ -1,11 +1,11 @@
-import { first, isNil } from 'lodash';
+import { NotFoundException } from '@nestjs/common';
+import { plainToClass } from 'class-transformer';
 import { ClassType } from 'class-transformer/ClassTransformer';
 import * as DataLoader from 'dataloader';
-import { plainToClass } from 'class-transformer';
-import { ObjectionCrudDao } from './objection-crud.dao';
-import { PaginationArguments } from '../types/pagination.type';
-import { NotFoundException } from '@nestjs/common';
+import { first, isNil } from 'lodash';
 import { CollectionUtils, StringUtils } from '../../core/utils';
+import { PaginationArguments } from '../types/pagination.type';
+import { ObjectionCrudDao } from './objection-crud.dao';
 
 export abstract class CrudService<T> {
   protected dao: ObjectionCrudDao<any>;
@@ -21,7 +21,7 @@ export abstract class CrudService<T> {
     return CollectionUtils.ensureOrder({
       keys,
       docs: result,
-      prop: StringUtils.snakeToCamel(this.dao.idColumn)
+      prop: StringUtils.snakeToCamel(this.dao.idColumn),
     });
   });
   protected readonly modelType: ClassType<T>; // cannot use plain to class directly with generic (generic are type not class)

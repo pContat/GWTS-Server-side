@@ -1,9 +1,9 @@
+import { get } from 'lodash';
 import * as Objection from 'objection';
 import { Model } from 'objection';
-import { Page, PaginationArguments } from '../types/pagination.type';
-import { get } from 'lodash';
 import { BaseModel } from '../models/base.model';
 import { CrudDao } from '../types/crud-dao';
+import { Page, PaginationArguments } from '../types/pagination.type';
 
 export interface ObjectionQueryOption {
   transaction?: Objection.Transaction;

@@ -1,18 +1,24 @@
 import { Test } from '@nestjs/testing';
 import { CommonModule } from '../../common/common.module';
-import { GwApiModule } from '../../gw-api/gw-api.module';
+import { ConfigModule } from '../../core/config/config.module';
 import { CoreModule } from '../../core/core.module';
-import {ConfigModule} from "../../core/config/config.module";
-import {DatabaseModule} from "../../database/database.module";
-import {TradeListingService} from "./trade-listing.service";
+import { DatabaseModule } from '../../database/database.module';
+import { GwApiModule } from '../../gw-api/gw-api.module';
+import { TradeListingService } from './trade-listing.service';
 
 describe('Recipe finder', () => {
   let tradeListingService: TradeListingService;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
-      providers: [  TradeListingService ],
-      imports: [CommonModule, GwApiModule, CoreModule,ConfigModule,DatabaseModule],
+      providers: [TradeListingService],
+      imports: [
+        CommonModule,
+        GwApiModule,
+        CoreModule,
+        ConfigModule,
+        DatabaseModule,
+      ],
     }).compile();
 
     tradeListingService = moduleRef.get<TradeListingService>(
@@ -24,7 +30,7 @@ describe('Recipe finder', () => {
     it('one', async () => {
       try {
         const result = await tradeListingService.getListing(70851);
-        expect(result).toEqual( {
+        expect(result).toEqual({
           id: 70851,
           buys: [],
           sells: [],
@@ -36,7 +42,7 @@ describe('Recipe finder', () => {
 
     it('multi', async () => {
       try {
-        const result = await tradeListingService.getListings([70851,70852]);
+        const result = await tradeListingService.getListings([70851, 70852]);
         expect(result.length).toEqual(2);
         expect(result).toEqual([
           {
@@ -48,13 +54,11 @@ describe('Recipe finder', () => {
             id: 70852,
             buys: [],
             sells: [],
-          }
+          },
         ]);
       } catch (e) {
         fail(e);
       }
     });
   });
-
-
 });

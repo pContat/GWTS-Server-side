@@ -1,5 +1,5 @@
-import { chunk , clone} from 'lodash';
-import {Observable} from "rxjs";
+import { chunk, clone } from 'lodash';
+import { Observable } from 'rxjs';
 
 export type AsyncFunction = (...args: any[]) => Promise<any>;
 export type ObservableFunction = (...args: any[]) => Observable<any>;
@@ -34,7 +34,7 @@ export class AsyncUtils {
 
   static async parallelBatch<T>(
     allParameters: T[],
-    callBack: (value: T, index : number, array : T[]) => Promise<any>,
+    callBack: (value: T, index: number, array: T[]) => Promise<any>,
     batchSize: number,
   ) {
     const finalResult = [];

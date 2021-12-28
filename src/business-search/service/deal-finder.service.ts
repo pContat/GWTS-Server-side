@@ -5,18 +5,18 @@
 - use inventory API
 */
 
-import {defaultDealCriteria} from '../conf/deal-critera';
-import {Injectable, Logger} from '@nestjs/common';
-import {ItemDao} from '../../common/service/item.dao';
-import {AsyncUtils, FileUtils, TimeUtils} from '../../core/utils';
-import {RecipeFinderService} from './recipe-finder.service';
-import {DealCritera} from '../type';
-import {FlippingFinderService} from './flipping-finder.service';
-import {TradeListingService} from './trade-listing.service';
+import { Injectable, Logger } from '@nestjs/common';
+import { ItemDao } from '../../common/service/item.dao';
+import { AsyncUtils, FileUtils, TimeUtils } from '../../core/utils';
+import { defaultDealCriteria } from '../conf/deal-critera';
+import { DealCriteria } from '../type';
+import { FlippingFinderService } from './flipping-finder.service';
+import { RecipeFinderService } from './recipe-finder.service';
+import { TradeListingService } from './trade-listing.service';
 
 @Injectable()
 export class DealFinder {
-  private configuration: DealCritera;
+  private configuration: DealCriteria;
   logger = new Logger(DealFinder.name);
 
   constructor(
@@ -59,7 +59,7 @@ export class DealFinder {
     const notTooMuch = await AsyncUtils.parallelBatch(
       matchingCriteriaItem,
       async item => {
-        if ( !(await this.doesMatchMinSellBuyRatio(item.id))) {
+        if (!(await this.doesMatchMinSellBuyRatio(item.id))) {
           this.logger.log(`no minimum buy/sale requirement for ${item.id}`);
           return;
         }
@@ -90,8 +90,10 @@ export class DealFinder {
 
   async doesMatchMinSellBuyRatio(itemId: number) {
     const listing = await this.tradeListingService.getListing(itemId);
-    return listing.buys.length > this.configuration.minimumNumberOfBuy &&
-        listing.sells.length > this.configuration.minimumNumberOfSale;
+    return (
+      listing.buys.length > this.configuration.minimumNumberOfBuy &&
+      listing.sells.length > this.configuration.minimumNumberOfSale
+    );
   }
 
   async matchConfiguration() {

@@ -1,15 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { chunk, isNil } from 'lodash';
 import { buildRecipeTree } from '../business-receipt/ingredient-tree';
 import { ItemDao } from '../common/service/item.dao';
-import { GWApiService } from '../gw-api/gw-http-api.service';
-import ReceiptDetail = GWAPI.RecipeDetail;
-import { GWAPI } from '../gw-api/gw-api-type';
-import { toItem, toRecipe } from './gw-api-converter';
-import { Ingredient, Item, Recipe } from '../common/type';
-import { BaseModel } from 'src/database/models/base.model';
 import { RecipeDao } from '../common/service/recipe.dao';
-import { isNil, chunk } from 'lodash';
-import {AsyncFunction, AsyncUtils} from "../core/utils";
+import { Ingredient, Item, Recipe } from '../common/type';
+import { AsyncFunction, AsyncUtils } from '../core/utils';
+import { GWAPI } from '../gw-api/gw-api-type';
+import { GWApiService } from '../gw-api/gw-http-api.service';
+import { toItem, toRecipe } from './gw-api-converter';
+import ReceiptDetail = GWAPI.RecipeDetail;
 
 @Injectable()
 export class ImportService {
@@ -76,9 +75,11 @@ export class ImportService {
       .filter(el => !isNil(el));
 
     try {
-      await this.recipeDao.bulkInsert(recipeList );
+      await this.recipeDao.bulkInsert(recipeList);
       await this.itemDao.bulkInsert(itemDocuments);
-      this.logger.log(`save recipe : ${recipeList.length}, item ${itemDocuments.length}`)
+      this.logger.log(
+        `save recipe : ${recipeList.length}, item ${itemDocuments.length}`,
+      );
     } catch (err) {
       this.logger.error('Something went wrong during insert', err);
       throw new Error(err);
@@ -147,7 +148,7 @@ export class ImportService {
   private async queuedCall(items: any[], functionToCall: AsyncFunction) {
     // create array of 200 parames
     const chunkedParam = chunk(items, this.padding);
-    return AsyncUtils.parallelBatch(chunkedParam,functionToCall,20)
+    return AsyncUtils.parallelBatch(chunkedParam, functionToCall, 20);
   }
 
   /*

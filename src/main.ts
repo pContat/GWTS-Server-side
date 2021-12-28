@@ -1,20 +1,18 @@
+import { NestApplicationOptions } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import {ConfigService} from "./core/config/config.service";
-import {AppLogger} from "./core/logger/logger.service";
-import {NestApplicationOptions} from "@nestjs/common";
-import morgan = require("morgan");
-import {ImportService} from "./businness-import/import.service";
-import {MigrationsService} from "./database/services/migration.service";
-import {DealFinder} from "./business-search/service/deal-finder.service";
+import { DealFinder } from './business-search/service/deal-finder.service';
+import { ImportService } from './businness-import/import.service';
+import { ConfigService } from './core/config/config.service';
+import { AppLogger } from './core/logger/logger.service';
+import { MigrationsService } from './database/services/migration.service';
+import morgan = require('morgan');
 
 async function bootstrap() {
-
   const appOptions: NestApplicationOptions = {
     logger: console, // by the time nest is bootstrapping
   };
   const app = await NestFactory.create(AppModule, appOptions);
-
 
   const configurationService = app.get(ConfigService);
   const appLogger = app.get(AppLogger);
@@ -27,13 +25,11 @@ async function bootstrap() {
   await migrationService.migrate();
 
   const importService = app.get(ImportService);
-  if(await importService.requiredImport()){
-    appLogger.log("required import");
+  if (await importService.requiredImport()) {
+    appLogger.log('required import');
     await importService.importItems();
     appLogger.log(`import done`);
-
   }
-
 
   // todo : comment that
   const dealService = app.get(DealFinder);
@@ -41,7 +37,6 @@ async function bootstrap() {
 
   await app.listen(configurationService.expressPort);
 }
-
 
 (async () => {
   try {

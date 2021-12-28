@@ -1,7 +1,7 @@
-import { ObjectionModule } from '@willsoto/nestjs-objection';
 import { Module } from '@nestjs/common';
+import { ObjectionModule } from '@willsoto/nestjs-objection';
+import { ConfigService } from '../core/config/config.service';
 import { MigrationsService } from './services/migration.service';
-import {ConfigService} from "../core/config/config.service";
 
 @Module({
   imports: [
@@ -11,13 +11,13 @@ import {ConfigService} from "../core/config/config.service";
       useFactory(config: ConfigService) {
         return {
           config: {
-            ...config.databaseConfiguration
-          }
+            ...config.databaseConfiguration,
+          },
         };
-      }
-    })
+      },
+    }),
   ],
   exports: [ObjectionModule, MigrationsService],
-  providers: [MigrationsService]
+  providers: [MigrationsService],
 })
 export class DatabaseModule {}
