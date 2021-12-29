@@ -25,6 +25,7 @@ exports.up = async knex => {
       table.string('icon_url'); //canbe null
       table.integer('level').notNull();
       table.specificType('flags', 'text[]'); //array
+      // easier to work with jsonb
     });
 };
 

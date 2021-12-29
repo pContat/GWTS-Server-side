@@ -14,7 +14,7 @@ export interface CrudDao<T extends BaseModel> {
 
   findByIds(ids: IdValue[]): Promise<T[]>;
 
-  insert(docToInsert: Partial<T> | Partial<T>[]): Promise<T>;
+  insert(docToInsert: Partial<T>): Promise<T>;
 
   patch(id: IdValue, docToUpdate: T): Promise<T>;
 

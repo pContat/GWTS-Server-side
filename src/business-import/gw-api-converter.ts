@@ -1,9 +1,9 @@
 import { Logger } from '@nestjs/common';
 import { Ingredient, Item, Recipe } from '../common/type';
-import { GWAPI } from '../gw-api/gw-api-type';
-import ItemDetail = GWAPI.ItemDetail;
-import RecipeDetail = GWAPI.RecipeDetail;
-import ApiIngredient = GWAPI.Ingredient;
+import { GuildWarsAPI } from '../gw-api/gw-api-type';
+import ItemDetail = GuildWarsAPI.ItemDetail;
+import RecipeDetail = GuildWarsAPI.RecipeDetail;
+import ApiIngredient = GuildWarsAPI.Ingredient;
 
 const logger = new Logger('GWApiConverter');
 

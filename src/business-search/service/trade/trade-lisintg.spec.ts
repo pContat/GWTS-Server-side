@@ -1,9 +1,9 @@
 import { Test } from '@nestjs/testing';
-import { CommonModule } from '../../common/common.module';
+import { CommonModule } from '../../../common/common.module';
 import { ConfigModule } from '../../core/config/config.module';
-import { CoreModule } from '../../core/core.module';
-import { DatabaseModule } from '../../database/database.module';
-import { GwApiModule } from '../../gw-api/gw-api.module';
+import { CoreModule } from '../../../core/core.module';
+import { DatabaseModule } from '../../../database/database.module';
+import { GwApiModule } from '../../../gw-api/gw-api.module';
 import { TradeListingService } from './trade-listing.service';
 
 describe('Recipe finder', () => {

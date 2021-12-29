@@ -1,5 +1,3 @@
-import * as moment from 'moment';
-
 export const green = '\u001b[42m \u001b[0m';
 export const red = '\u001b[41m \u001b[0m';
 
@@ -24,13 +22,5 @@ export class TimeUtils {
     const seconds = ((millis % 60000) / 1000).toFixed(0);
     const padding = seconds < '10' ? '0' : '';
     return `${minutes}:${padding}${seconds} min`;
-  }
-
-  static stringToDate(dateString: string) {
-    return moment(dateString).toDate();
-  }
-
-  static timestampToDate(timestamp: number) {
-    return moment(timestamp).toDate();
   }
 }

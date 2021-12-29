@@ -1,48 +1,61 @@
-import { get } from 'lodash';
+import { get, isEmpty } from 'lodash';
 import * as Objection from 'objection';
-import { Model } from 'objection';
-import { BaseModel } from '../models/base.model';
+import {
+  OrderByDirection,
+  PartialModelObject,
+  TransactionOrKnex,
+} from 'objection';
 import { CrudDao } from '../types/crud-dao';
+import { ObjectionQueryOption } from '../types/objection-query-option';
 import { Page, PaginationArguments } from '../types/pagination.type';
+import { SourceProvider } from '../types/source-provider';
 
-export interface ObjectionQueryOption {
-  transaction?: Objection.Transaction;
-  relationExpression?: string;
+export function responseToPage<T>(
+  pagingParam: { offset: number; limit: number },
+  results: T[],
+  total: number,
+): Page<T> {
+  const pageNumber = Math.ceil(pagingParam.offset / pagingParam.limit) + 1;
+  const totalPages = Math.ceil(total / pagingParam.limit); // page start at 0
+  return {
+    results,
+    pageNumber,
+    totalPages,
+    first: pagingParam.offset === 0,
+    last: pageNumber === totalPages,
+    numberOfElements: results.length,
+    pageSize: pagingParam.limit,
+    totalElements: total,
+  };
 }
 
-export class ObjectionCrudDao<TModel extends BaseModel>
+export class ObjectionCrudDao<TModel extends Objection.Model>
   implements CrudDao<TModel> {
   readonly idColumn: string;
-  public readonly model: any; // can't call generics static method/property
 
-  constructor(model: typeof Model) {
-    this.model = model as any;
-    this.idColumn = this.model.idColumn as string;
+  // model is a class
+  public readonly model: typeof Objection.Model; // can't call generics static method/property
+
+  constructor(model: typeof Objection.Model) {
+    this.model = model;
+    this.idColumn = model.idColumn as string;
+  }
+
+  public query(trxOrKnex?: TransactionOrKnex) {
+    return this.model.query(trxOrKnex) as Objection.QueryBuilder<TModel>;
   }
 
   async paginate(
     pagingParam: PaginationArguments,
     option: ObjectionQueryOption & {
-      sourceProvider?: () => Promise<{ results: TModel[]; total: number }>;
+      sourceProvider?: SourceProvider<TModel>;
     } = {},
   ): Promise<Page<TModel>> {
     const { results, total } = option.sourceProvider
-      ? await option.sourceProvider()
+      ? await option.sourceProvider(pagingParam, option)
       : await this.findAllSourceProvider(pagingParam, option);
 
-    const pageNumber = Math.ceil(pagingParam.offset / pagingParam.limit);
-    const totalPages = Math.ceil(total / pagingParam.limit) - 1; //page start at 0
-
-    return {
-      results,
-      pageNumber,
-      totalPages,
-      first: pagingParam.offset === 0,
-      last: pageNumber === totalPages,
-      numberOfElements: results.length,
-      pageSize: pagingParam.limit,
-      totalElements: total,
-    };
+    return responseToPage(pagingParam, results, total);
   }
 
   public async findAllSourceProvider(
@@ -50,38 +63,20 @@ export class ObjectionCrudDao<TModel extends BaseModel>
     option: ObjectionQueryOption = {},
   ): Promise<{ results: TModel[]; total: number }> {
     const baseQuery = this.getBasicFindAndCountQuery(params, option);
-    return await baseQuery.execute();
+    return baseQuery.execute();
   }
 
   public async findAll(
-    paginationArguments: PaginationArguments = { limit: 0, offset: 0 },
+    options: PaginationArguments,
     option: ObjectionQueryOption = {},
   ): Promise<TModel[]> {
-    const baseQuery = this.model
-      .query(option.transaction)
-      .orderBy(this.idColumn, 'DESC');
-    if (this.model.isTraceable) {
-      baseQuery.whereNull('delete_at');
+    const baseQuery = this.findAllQuery(options, option);
+    if (options.offset !== 0 && options.limit !== 0) {
+      baseQuery.limit(options.limit).offset(options.offset);
     }
-
-    if (paginationArguments.offset !== 0 && paginationArguments.limit !== 0) {
-      baseQuery
-        .limit(paginationArguments.limit)
-        .offset(paginationArguments.offset);
-    }
-
-    if (paginationArguments.sortCol) {
-      baseQuery.orderBy(
-        paginationArguments.sortCol,
-        get(paginationArguments.sortOrder, 'DESC'),
-      );
-    } else {
-      baseQuery.orderBy(this.idColumn, 'DESC');
-    }
-    return await baseQuery.execute();
+    return baseQuery.execute();
   }
 
-  // todo add dataloader
   public async findById(
     id: number | string | number[] | string[],
     option: ObjectionQueryOption = {},
@@ -90,48 +85,48 @@ export class ObjectionCrudDao<TModel extends BaseModel>
     // todo change this when composite
     findObject[this.idColumn] = id;
 
-    const baseQuery = this.model
-      .query(option.transaction)
+    const baseQuery = this.query(option.transaction)
       .findOne(findObject)
       .withGraphFetched(option.relationExpression);
 
-    if (this.model.isTraceable) {
+    if ((<any>this.model).isTraceable) {
       baseQuery.whereNull('delete_at');
     }
 
-    return await baseQuery;
+    return baseQuery;
   }
 
   public async findByIds(
     ids: number[] | string[],
     option: ObjectionQueryOption = {},
   ): Promise<TModel[]> {
-    const baseQuery = this.model
-      .query(option.transaction)
+    const baseQuery = this.query(option.transaction)
       .whereIn(this.idColumn, ids)
       .withGraphFetched(option.relationExpression)
       .orderBy(this.idColumn, 'DESC');
 
-    if (this.model.isTraceable) {
+    if ((<any>this.model).isTraceable) {
       baseQuery.whereNull('delete_at');
     }
 
-    return await baseQuery;
+    return baseQuery;
   }
 
   public async insert(
     docToInsert: Partial<TModel>,
     option: ObjectionQueryOption = {},
   ): Promise<TModel> {
-    return await this.model.query(option.transaction).insert(docToInsert);
+    return this.query(option.transaction).insert(docToInsert as any);
   }
 
-  // todo add transaction like update here
   public async bulkInsert(
-    docToInsert: Partial<TModel>[],
+    docToInsert: PartialModelObject<TModel>[],
     option: ObjectionQueryOption = {},
   ): Promise<TModel[]> {
-    return await this.model.query(option.transaction).insert(docToInsert);
+    if (isEmpty(docToInsert)) {
+      return [];
+    }
+    return this.query(option.transaction).insert(docToInsert);
   }
 
   public async patch(
@@ -139,10 +134,22 @@ export class ObjectionCrudDao<TModel extends BaseModel>
     docToUpdate: Partial<TModel>,
     option: ObjectionQueryOption = {},
   ): Promise<TModel> {
-    return await this.model
-      .query(option.transaction)
+    return this.query(option.transaction)
       .withGraphFetched(option.relationExpression)
-      .patchAndFetchById(id, docToUpdate);
+      .patchAndFetchById(
+        id,
+        (docToUpdate as unknown) as PartialModelObject<TModel>,
+      );
+  }
+
+  public async simpleUpsert(
+    id: number | string,
+    docToUpdate: Partial<TModel>,
+    option: ObjectionQueryOption = {},
+  ): Promise<TModel> {
+    return id
+      ? this.patch(id, docToUpdate, option)
+      : this.insert(docToUpdate as any, option);
   }
 
   public async multiOnePatch(
@@ -150,9 +157,8 @@ export class ObjectionCrudDao<TModel extends BaseModel>
     patchNote: Partial<TModel>,
     option: ObjectionQueryOption = {},
   ): Promise<TModel[]> {
-    return await this.model
-      .query(option.transaction)
-      .patch(patchNote)
+    return this.query(option.transaction)
+      .patch((patchNote as unknown) as PartialModelObject<TModel>)
       .whereIn(this.idColumn, ids)
       .returning('*');
   }
@@ -162,22 +168,19 @@ export class ObjectionCrudDao<TModel extends BaseModel>
     option: ObjectionQueryOption = {},
   ): Promise<TModel[]> {
     if (!option.transaction) {
-      return await Objection.transaction(
-        this.model.knex(),
-        async transaction => {
-          return await Promise.all(
-            docs.map(docToUpdate => {
-              return this.patch(docToUpdate.id, docToUpdate.doc, {
-                transaction,
-                relationExpression: option.relationExpression,
-              });
-            }),
-          );
-        },
-      );
+      return Objection.transaction(this.model.knex(), async transaction => {
+        return Promise.all(
+          docs.map(docToUpdate => {
+            return this.patch(docToUpdate.id, docToUpdate.doc, {
+              transaction,
+              relationExpression: option.relationExpression,
+            });
+          }),
+        );
+      });
     }
 
-    return await Promise.all(
+    return Promise.all(
       docs.map(docToUpdate => {
         return this.patch(docToUpdate.id, docToUpdate.doc, option);
       }),
@@ -189,40 +192,64 @@ export class ObjectionCrudDao<TModel extends BaseModel>
     docToUpdate: TModel,
     option: ObjectionQueryOption = {},
   ): Promise<TModel> {
-    return await this.model
-      .query(option.transaction)
-      .updateAndFetchById(id, docToUpdate);
+    // todo : fix typing
+    return this.query(option.transaction).updateAndFetchById(
+      id,
+      docToUpdate as any,
+    );
   }
 
   public async delete(
     ids: number[] | string[],
     option: ObjectionQueryOption = {},
   ): Promise<TModel[]> {
-    if (this.model.isTraceable) {
-      return await this.multiOnePatch(ids, { delete_at: new Date() } as any);
+    if ((<any>this.model).isTraceable) {
+      // todo : where delete not already present to prevent trigger update ?
+      return this.multiOnePatch(ids, { delete_at: new Date() } as any);
     }
-    return await this.model
-      .query(option.transaction)
+    return this.query(option.transaction)
       .delete()
       .whereIn(this.idColumn, ids)
       .returning('*');
   }
 
-  // allow to easily extend find and count for specifique use case
+  // in case of traceable to remove the data for good
+  public async hardDelete(
+    ids: number[] | string[],
+    option: ObjectionQueryOption = {},
+  ): Promise<TModel[]> {
+    return this.query(option.transaction)
+      .delete()
+      .whereIn(this.idColumn, ids)
+      .returning('*');
+  }
+
+  // allow to easily extend find and count for specific use case
   protected getBasicFindAndCountQuery(
     params: PaginationArguments,
     option: ObjectionQueryOption = {},
   ) {
     // range is inclusive
-    const baseQuery = this.model
-      .query(option.transaction)
-      .range(params.offset, params.offset + params.limit - 1);
+    const baseQuery = this.findAllQuery(params, option).range(
+      params.offset,
+      params.offset + params.limit - 1,
+    );
+    return baseQuery;
+  }
 
-    if (this.model.isTraceable) {
+  protected findAllQuery(
+    params: PaginationArguments,
+    option: ObjectionQueryOption = {},
+  ) {
+    const baseQuery = this.query(option.transaction);
+    if ((<any>this.model).isTraceable) {
       baseQuery.whereNull('delete_at');
     }
     if (params.sortCol) {
-      baseQuery.orderBy(params.sortCol, get(params, 'sortOrder', 'DESC'));
+      baseQuery.orderBy(
+        params.sortCol,
+        get(params, 'sortOrder', 'DESC') as OrderByDirection,
+      );
     } else {
       baseQuery.orderBy(this.idColumn, 'DESC');
     }

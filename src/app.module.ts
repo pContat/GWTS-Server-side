@@ -2,15 +2,17 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SearchModule } from './business-search/search.module';
-import { ImportModule } from './businness-import/import.module';
-import { ConfigModule } from './core/config/config.module';
+import { ImportModule } from './business-import/import.module';
+import { ConfigurationModule } from './core/configuration/configuration.module';
 import { CoreModule } from './core/core.module';
 import { DatabaseModule } from './database/database.module';
+import { LoggerModule } from './core/logger/logger.module';
 
 @Module({
   imports: [
     CoreModule,
-    ConfigModule,
+    ConfigurationModule,
+    LoggerModule,
     DatabaseModule,
     ImportModule,
     SearchModule,

@@ -1,14 +1,14 @@
 import { Test } from '@nestjs/testing';
-import { CommonModule } from '../../common/common.module';
-import { ItemModel } from '../../common/model/item-model';
+import { CommonModule } from '../../../common/common.module';
+import { ItemModel } from '../../../common/model/item-model';
 import { ConfigModule } from '../../core/config/config.module';
-import { CoreModule } from '../../core/core.module';
-import { DatabaseModule } from '../../database/database.module';
-import { GwApiModule } from '../../gw-api/gw-api.module';
-import { DealFinder } from './deal-finder.service';
-import { PriceFinder } from './price-finder.service';
+import { CoreModule } from '../../../core/core.module';
+import { DatabaseModule } from '../../../database/database.module';
+import { GwApiModule } from '../../../gw-api/gw-api.module';
+import { DealFinder } from '../deal/deal-finder.service';
+import { PriceFinder } from '../price-finder.service';
 import { RecipeFinderService } from './recipe-finder.service';
-import { TradeListingService } from './trade-listing.service';
+import { TradeListingService } from '../trade/trade-listing.service';
 
 describe('Recipe finder', () => {
   let recipeFinderService: RecipeFinderService;

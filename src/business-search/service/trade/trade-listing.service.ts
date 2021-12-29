@@ -1,23 +1,23 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { isNil } from '@nestjs/common/utils/shared.utils';
-import * as DataLoader from 'dataloader';
+import DataLoader from 'dataloader';
 import { first, without } from 'lodash';
-import { getAllItemId } from '../../business-receipt/ingredient-tree';
-import { ItemDao } from '../../common/service/item.dao';
-import { CacheService } from '../../core/cache/cache.service';
-import { AsyncUtils } from '../../core/utils';
-import { GWAPI } from '../../gw-api/gw-api-type';
-import { GWApiService } from '../../gw-api/gw-http-api.service';
-import { SearchableRecipeNode } from '../searchable-recipe-node';
+import { getAllItemId } from '../../../business-receipt/ingredient-tree';
+import { ItemDao } from '../../../common/service/item.dao';
+import { CacheService } from '../../../core/cache/cache.service';
+import { AsyncUtils } from '../../../core/utils';
+import { GuildWarsAPI } from '../../../gw-api/gw-api-type';
+import { GWApiService } from '../../../gw-api/gw-http-api.service';
+import { SearchableRecipeNode } from '../../searchable-recipe-node';
 
-import Listing = GWAPI.Listing;
+import Listing = GuildWarsAPI.Listing;
 
 // will handle the listing cache and batch request with dataloader
 @Injectable()
 export class TradeListingService {
   logger = new Logger(TradeListingService.name);
 
-  readonly byIdsLoader: DataLoader<number, GWAPI.Listing>;
+  readonly byIdsLoader: DataLoader<number, GuildWarsAPI.Listing>;
 
   constructor(
     private readonly cacheService: CacheService,

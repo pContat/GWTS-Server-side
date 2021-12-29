@@ -1,15 +1,16 @@
-import { chunk, clone } from 'lodash';
+import { chunk, cloneDeep } from 'lodash';
 import { Observable } from 'rxjs';
 
 export type AsyncFunction = (...args: any[]) => Promise<any>;
 export type ObservableFunction = (...args: any[]) => Observable<any>;
-export type TypedAsyncFunction<T> = (...args: any[]) => Promise<T>;
+export type TypedAsyncFunction<T, U> = (...args: T[]) => Promise<U>;
+export type TypedAsyncMapper<T, U> = (value: T, index: number, array: T[]) => Promise<U>;
 
 export class AsyncUtils {
   // apply the callback with the given array of param
-  static async pseries(params: any[], callBack: AsyncFunction): Promise<any> {
+  static async pseries<T>(params: T[], callBack: AsyncFunction): Promise<unknown> {
     return params.reduce((promise, item) => {
-      return promise.then((result: any) => callBack(item));
+      return promise.then(() => callBack(item));
     }, Promise.resolve());
   }
 
@@ -19,40 +20,36 @@ export class AsyncUtils {
     }, Promise.resolve());
   }
 
-  static async asyncForEach(array: any[], callback: AsyncFunction) {
-    for (let index = 0; index < array.length; index++) {
-      await callback(array[index], index, array);
-    }
-  }
-
   static async pAll(factoryList: AsyncFunction[]) {
-    const pendingPromiseList = factoryList.map(asyncFunction =>
-      asyncFunction(),
-    );
-    return await Promise.all(pendingPromiseList);
+    const pendingPromiseList = factoryList.map((asyncFunction) => asyncFunction());
+    return Promise.all(pendingPromiseList);
   }
 
-  static async parallelBatch<T>(
+  static async asyncForEach<T, U>(array: T[], callback: TypedAsyncMapper<T, U>) {
+    const promiseList = array.map(callback);
+    return Promise.all(promiseList);
+  }
+
+  static async parallelBatch<T, U>(
     allParameters: T[],
-    callBack: (value: T, index: number, array: T[]) => Promise<any>,
-    batchSize: number,
-  ) {
+    mapper: TypedAsyncMapper<T, U>,
+    batchSize: number
+  ): Promise<U[]> {
+    const copyParam = cloneDeep(allParameters);
     const finalResult = [];
-    const paramCopy = clone(allParameters);
-    // should copy
-    while (paramCopy.length > 0) {
-      const params = paramCopy.splice(0, batchSize);
-      const promiseCall = params.map(callBack);
-      const batchResult = await Promise.all(promiseCall);
-      finalResult.push(batchResult);
+    while (copyParam.length > 0) {
+      const params = copyParam.splice(0, batchSize);
+      // eslint-disable-next-line no-await-in-loop
+      const batchResult = await Promise.all(params.map(mapper));
+      finalResult.push(...batchResult);
     }
     return finalResult;
   }
 
   static async serieBatch(functionStacks: AsyncFunction[], batchSize: number) {
-    return chunk(functionStacks, batchSize).map(batch => {
-      return async () =>
-        Promise.all(batch.map((request: AsyncFunction) => request()));
+    return chunk(functionStacks, batchSize).map((batch) => {
+      // eslint-disable-next-line @typescript-eslint/ban-types
+      return async () => Promise.all(batch.map((request: Function) => request()));
     });
   }
 
@@ -60,13 +57,14 @@ export class AsyncUtils {
   static async reflectedParallelBatch(
     allParameters: any[],
     callBack: AsyncFunction,
-    batchSize: number,
+    batchSize: number
   ) {
     const finalResult = [];
     while (allParameters.length > 0) {
       const params = allParameters.splice(0, batchSize);
+      // eslint-disable-next-line no-await-in-loop
       const batchResult = await Promise.all(
-        params.map(param => AsyncUtils.reflect(callBack(param))),
+        params.map((param) => AsyncUtils.reflect(callBack(param)))
       );
       finalResult.push(...batchResult);
     }
@@ -76,12 +74,12 @@ export class AsyncUtils {
   // do not stop promise.all even if one reject
   static reflect(promise: any) {
     return promise.then(
-      (v: any) => {
+      function (v: any) {
         return { v, status: 'resolve' };
       },
-      (e: any) => {
+      function (e: any) {
         return { e: e.message || e, status: 'rejected' };
-      },
+      }
     );
   }
 }

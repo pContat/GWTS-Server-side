@@ -1,41 +1,53 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cache, caching, Store } from 'cache-manager';
-import { AsyncFunction } from '../utils';
+import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
+import { Cache, CachingConfig } from 'cache-manager';
+import { AsyncFunction, AsyncUtils } from '../utils';
 
+@Injectable()
 @Injectable()
 export class CacheService {
   readonly log = new Logger(CacheService.name);
-  public memoryCache: Store & Cache;
 
-  constructor() {
-    // todo : change it when production
-    this.memoryCache = caching({
-      store: 'memory',
-      max: 100,
-      ttl: 100000 /*seconds*/,
-    });
+  private cleanCallBackList: AsyncFunction[] = [];
+
+  constructor(
+    @Inject(CACHE_MANAGER)
+    private cacheManager: Cache & { mget?<T>(...args: any[]): Promise<any> },
+  ) {
+    console.log(cacheManager);
+  }
+
+  public registerCleanCallBack(cleanCallBack: AsyncFunction) {
+    this.cleanCallBackList.push(cleanCallBack);
   }
 
   public async flushAll() {
-    this.log.debug('flush cache');
-    this.memoryCache = caching({
-      store: 'memory',
-      max: 100,
-      ttl: 100000 /*seconds*/,
-    });
+    this.log.log('flush cache');
+    await this.cacheManager.reset();
+    return AsyncUtils.pAll(this.cleanCallBackList);
   }
 
-  public async get<T>(key: any, callbackIfNotFound: AsyncFunction): Promise<T> {
-    this.log.debug(`get key ${key}`);
-    return await this.memoryCache.wrap(key, callbackIfNotFound);
+  public async get<T>(
+    key: string,
+    callbackIfNotFound: AsyncFunction,
+  ): Promise<T> {
+    this.log.debug(`get key${key}`);
+    return this.cacheManager.wrap(key, callbackIfNotFound);
   }
 
-  public async set(key: any, value: any): Promise<any> {
-    return await this.memoryCache.set(key, value, { ttl: 100000 });
+  public async set(
+    key: string,
+    value: any,
+    options?: CachingConfig,
+  ): Promise<any> {
+    this.log.debug(`set key ${key}`);
+    return this.cacheManager.set(key, value, options);
   }
 
-  public async mget(keys: any[]): Promise<any[]> {
-    this.log.debug(`get keys ${keys.toString()}`);
-    return await this.memoryCache.mget(...keys);
+  public async mget(
+    keys: string[],
+    callbackIfNotFound?: AsyncFunction,
+  ): Promise<any> {
+    this.log.debug(`get mkeys ${keys.toString()}`);
+    return this.cacheManager.mget(...keys);
   }
 }

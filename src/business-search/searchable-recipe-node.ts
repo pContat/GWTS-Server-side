@@ -1,11 +1,8 @@
 // transform treeNodeToSearchableTreeNode
 import { isNil } from 'lodash';
 import { TreeNode } from '../business-receipt/type';
-import { GWAPI } from '../gw-api/gw-api-type';
-import { PriceFinder } from './service/price-finder.service';
-import { RecipeFinderService } from './service/recipe-finder.service';
+import { CANT_BUY, CANT_CRAFT, DONT_CRAFT } from './service/const';
 import { BuyableIngredient } from './type';
-import Price = GWAPI.Price;
 
 export class SearchableRecipeNode<T> extends TreeNode<T> {
   public parent: SearchableRecipeNode<T> | undefined;
@@ -35,12 +32,12 @@ export function nodeToString(
     ? node.data.originalBuyPrice
     : node.data.buyPrice;
   let craft =
-    node.data.craftPrice === PriceFinder.CANTCRAFT ||
-    node.data.craftPrice === PriceFinder.CANTBUY ||
+    node.data.craftPrice === CANT_CRAFT ||
+    node.data.craftPrice === CANT_BUY ||
     isNil(node.data.craftPrice)
       ? 'KO'
       : node.data.craftPrice;
-  if (node.data.craftPrice === RecipeFinderService.DONTCRAFT) {
+  if (node.data.craftPrice === DONT_CRAFT) {
     craft = 'Not Worse';
   }
 

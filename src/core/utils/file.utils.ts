@@ -70,16 +70,14 @@ export class FileUtils {
     return undefined;
   }
 
-  static async createJsonFile(content: any, path: string) {
-    // stringify JSON Object
+  static async createJsonFile(content: unknown, path: string) {
     const jsonContent = JSON.stringify(content);
-
     return new Promise((resolve, reject) => {
       writeFile(path, jsonContent, 'utf8', err => {
         if (err) {
           reject(err);
         }
-        resolve();
+        resolve(true);
       });
     });
   }

@@ -4,7 +4,7 @@ import { ItemModel } from '../../common/model/item-model';
 import { ItemDao } from '../../common/service/item.dao';
 import { CacheService } from '../../core/cache/cache.service';
 import { defaultDealCriteria } from '../conf/deal-critera';
-import { TradeListingService } from './trade-listing.service';
+import { TradeListingService } from './trade/trade-listing.service';
 
 @Injectable()
 export class FlippingFinderService {

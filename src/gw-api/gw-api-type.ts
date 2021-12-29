@@ -1,4 +1,4 @@
-export namespace GWAPI {
+export namespace GuildWarsAPI {
   export interface Details {
     type: string;
     damage_type: string;

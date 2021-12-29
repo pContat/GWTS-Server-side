@@ -1,19 +1,21 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { chunk, isNil } from 'lodash';
 import { buildRecipeTree } from '../business-receipt/ingredient-tree';
 import { ItemDao } from '../common/service/item.dao';
 import { RecipeDao } from '../common/service/recipe.dao';
+import { FileStorageInterface } from '../common/storage/file-storage.interface';
+import { apiStorage } from '../common/storage/storage-provider';
 import { Ingredient, Item, Recipe } from '../common/type';
 import { AsyncFunction, AsyncUtils } from '../core/utils';
-import { GWAPI } from '../gw-api/gw-api-type';
+import { GuildWarsAPI } from '../gw-api/gw-api-type';
 import { GWApiService } from '../gw-api/gw-http-api.service';
 import { toItem, toRecipe } from './gw-api-converter';
-import ReceiptDetail = GWAPI.RecipeDetail;
+import ReceiptDetail = GuildWarsAPI.RecipeDetail;
 
 @Injectable()
 export class ImportService {
   // warning size
-  private padding = 200;
+  private padding = 100;
   private canBePurchase: Map<number, number>;
   recipeForItemCache: Map<number, Recipe>;
   logger = new Logger(ImportService.name);
@@ -22,19 +24,20 @@ export class ImportService {
     private readonly itemDao: ItemDao,
     private readonly recipeDao: RecipeDao,
     private readonly gwApiService: GWApiService,
+    @Inject(apiStorage) readonly storageService: FileStorageInterface,
   ) {
     this.recipeForItemCache = new Map();
     this.canBePurchase = this.craftingSupplies();
   }
 
   async importItems() {
-    this.logger.log('start import');
+    this.logger.log('start Guild Wars DB import');
     try {
       await this.createRecipeCache();
       this.logger.log('recipe cache created');
       const items = await this.gwApiService.getAllItemsId();
       this.logger.log(`${items.length} item to insert`);
-      await this.queuedCall(items, this.saveItems.bind(this));
+      await this.queuedCall(items, itemsIds => this.saveItems(itemsIds));
     } catch (e) {
       this.logger.error(e);
     }
@@ -46,9 +49,30 @@ export class ImportService {
 
   private async createRecipeCache(): Promise<void> {
     try {
-      const recipes = await this.gwApiService.getAllRecipesId();
-      this.logger.log(`${recipes.length} recipe to insert`);
-      await this.queuedCall(recipes, this.populateRecipeCache.bind(this));
+      const cacheName = 'recipe-cache.json';
+      if (await this.storageService.doesFileExist(cacheName)) {
+        this.logger.log('cache detected, start loading');
+        const content = JSON.parse(
+          await this.storageService.getFileContent(cacheName),
+        ) as Record<string, Recipe>;
+        this.recipeForItemCache = new Map(
+          Object.keys(content).map(key => [+key, content[key]]),
+        );
+      } else {
+        const recipes = await this.gwApiService.getAllRecipesId();
+        this.logger.log(`${recipes.length} recipe to insert`);
+        await this.queuedCall(recipes, recipeIds =>
+          this.populateRecipeCache(recipeIds),
+        );
+        await this.storageService.saveFile(
+          'recipe-cache.json',
+          Buffer.from(
+            JSON.stringify(Object.fromEntries(this.recipeForItemCache)),
+          ),
+          { isPublic: true },
+        );
+      }
+      this.logger.log(`recipe cache dumped`);
     } catch (e) {
       this.logger.error(e);
       throw new Error('Unable to create recipe cache');
@@ -148,7 +172,7 @@ export class ImportService {
   private async queuedCall(items: any[], functionToCall: AsyncFunction) {
     // create array of 200 parames
     const chunkedParam = chunk(items, this.padding);
-    return AsyncUtils.parallelBatch(chunkedParam, functionToCall, 20);
+    return AsyncUtils.parallelBatch(chunkedParam, functionToCall, 5);
   }
 
   /*

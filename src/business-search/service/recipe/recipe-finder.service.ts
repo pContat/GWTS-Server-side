@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { clone, isEmpty, isNil, map } from 'lodash';
-import { printRecipeTree } from '../../business-receipt/print-tree';
-import { TreeNode } from '../../business-receipt/type';
-import { ItemModel } from '../../common/model/item-model';
-import { CacheService } from '../../core/cache/cache.service';
-import { SearchableRecipeNode } from '../searchable-recipe-node';
-import { BuyableIngredient, RecipeResult } from '../type';
-import { getTotalPrice, PriceFinder } from './price-finder.service';
-import { TradeListingService } from './trade-listing.service';
+import { printRecipeTree } from '../../../business-receipt/print-tree';
+import { TreeNode } from '../../../business-receipt/type';
+import { ItemModel } from '../../../common/model/item-model';
+import { CacheService } from '../../../core/cache/cache.service';
+import { SearchableRecipeNode } from '../../searchable-recipe-node';
+import { BuyableIngredient, RecipeResult } from '../../type';
+import { getTotalPrice, PriceFinder } from '../price-finder.service';
+import { TradeListingService } from '../trade/trade-listing.service';
 
 /**
  * Find the best recipe to craft the given item
@@ -16,7 +16,7 @@ import { TradeListingService } from './trade-listing.service';
 @Injectable()
 export class RecipeFinderService {
   logger = new Logger(RecipeFinderService.name);
-  static readonly DONTCRAFT = -3;
+
 
   constructor(
     private readonly priceFinder: PriceFinder,

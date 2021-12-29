@@ -1,30 +1,32 @@
-import { Injectable, Logger } from '@nestjs/common';
-import * as morgan from 'morgan';
+import { ConsoleLogger, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Request, Response } from 'express';
+import { DateTime } from 'luxon';
 import {
   createLogger,
   format,
   Logger as WinstonLogger,
   transports,
 } from 'winston';
-import { ConfigService } from '../config/config.service';
-import moment = require('moment');
+import { AppConfiguration } from '../configuration/configuration';
 
 @Injectable()
-export class AppLogger extends Logger {
+export class AppLogger extends ConsoleLogger {
   private winstonLogger: WinstonLogger;
 
-  constructor(private readonly confService: ConfigService) {
+  constructor(private readonly confService: ConfigService<AppConfiguration>) {
     super();
 
-    const errorStackFormat = format((info, opt) => {
+    const errorStackFormat = format(info => {
       if (info.stack) {
+        // eslint-disable-next-line no-param-reassign
         info.message = `${info.message} ${info.stack}`;
       }
       return info;
     });
 
     this.winstonLogger = createLogger({
-      level: confService.logLevel,
+      level: this.confService.get('LOG_LEVEL'),
       format: format.combine(
         errorStackFormat(),
         format.colorize(),
@@ -33,23 +35,15 @@ export class AppLogger extends Logger {
       transports: [new transports.Console({ handleExceptions: true })],
       exitOnError: false,
     });
-
-    this.log(`logger lvl = ${this.confService.logLevel}`, AppLogger.name);
   }
 
-  get stream() {
-    return {
-      write: (message: string) => Logger.log(message),
-    };
-  }
-
-  get morganOption(): morgan.Options {
+  get morganOption() {
     return {
       stream: {
         write: (message: string) => this.log(message.trim()),
       },
-      skip: (req, res) => {
-        return req.originalUrl.includes('ping');
+      skip: (req: Request, res: Response) => {
+        return req.originalUrl.includes('ping') || res.statusCode < 400;
       },
     };
   }
@@ -66,8 +60,19 @@ export class AppLogger extends Logger {
     this.winstonLogger.warn(this.addContext(context, message));
   }
 
+  debug(message: string, context?: string) {
+    this.winstonLogger.debug(this.addContext(context, message));
+  }
+
+  verbose(message: string, context?: string) {
+    this.winstonLogger.verbose(this.addContext(context, message));
+  }
+
   private addContext = (scope: string | undefined, message: string): string => {
-    const now = moment().format('MMM Do YYYY, h:mm:ss a');
+    const now = DateTime.now().toLocaleString(
+      DateTime.DATETIME_SHORT_WITH_SECONDS,
+    );
+
     return scope
       ? `${now} [\x1b[33m${scope}\x1b[0m] ${message}`
       : `${now} ${message}`;

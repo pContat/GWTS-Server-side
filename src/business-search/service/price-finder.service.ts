@@ -1,25 +1,20 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { isEmpty } from 'lodash';
 import { TreeNode } from '../../business-receipt/type';
-import { ItemDao } from '../../common/service/item.dao';
-import { GWAPI } from '../../gw-api/gw-api-type';
+import { GuildWarsAPI } from '../../gw-api/gw-api-type';
 import { SearchableRecipeNode } from '../searchable-recipe-node';
 import { BuyableIngredient } from '../type';
-import { RecipeFinderService } from './recipe-finder.service';
-import { TradeListingService } from './trade-listing.service';
-import Listing = GWAPI.Listing;
+import { CANT_BUY, CANT_CRAFT, DONT_CRAFT } from './const';
+import { TradeListingService } from './trade/trade-listing.service';
+import Listing = GuildWarsAPI.Listing;
 
 @Injectable()
 export class PriceFinder {
   logger = new Logger(PriceFinder.name);
-  static readonly CANTBUY = -1;
-  static readonly CANTCRAFT = -2;
+
   private shotCutPriceMap: Map<number, number>;
 
-  constructor(
-    private readonly itemDao: ItemDao,
-    private readonly tradeListingService: TradeListingService,
-  ) {
+  constructor(private readonly tradeListingService: TradeListingService) {
     // todo : move this to dedicated class or redis
     this.shotCutPriceMap = new Map<number, number>();
   }
@@ -34,6 +29,7 @@ export class PriceFinder {
     // use validator to confirm and mitigate the error
 
     const itemListing = await this.tradeListingService.getListing(itemId);
+
     if (itemListing.sells.length == 0) {
       return this.noSaleFoundHandler(itemListing);
     }
@@ -50,7 +46,7 @@ export class PriceFinder {
         numberToBuy -= stackQuantity;
         i++;
         if (!itemListing.sells[i]) {
-          return PriceFinder.CANTBUY;
+          return CANT_BUY;
         }
       } else {
         total += stackUnitPrice * numberToBuy;
@@ -65,11 +61,11 @@ export class PriceFinder {
   private findCraftPrice(item: TreeNode<BuyableIngredient>): number {
     const ingredientsPrice = item.children.map(child => child.data.buyPrice);
     const cantCraft = ingredientsPrice.find(
-      (price: number) => price === PriceFinder.CANTBUY,
+      (price: number) => price === CANT_BUY,
     );
     if (!isEmpty(cantCraft)) {
       this.logger.error('cant buy it');
-      return PriceFinder.CANTCRAFT;
+      return CANT_CRAFT;
     }
     return ingredientsPrice.reduce((a, b) => a + b, 0);
   }
@@ -82,16 +78,14 @@ export class PriceFinder {
     item: SearchableRecipeNode<BuyableIngredient>,
   ): number {
     const ingredientsPrice = this.findCraftPrice(item);
-    if (ingredientsPrice === PriceFinder.CANTCRAFT) {
-      return PriceFinder.CANTCRAFT;
+    if (ingredientsPrice === CANT_CRAFT) {
+      return CANT_CRAFT;
     }
     const nodePrice = item.data.buyPrice;
-    if (nodePrice === PriceFinder.CANTBUY) {
+    if (nodePrice === CANT_BUY) {
       return ingredientsPrice;
     }
-    return ingredientsPrice < nodePrice
-      ? ingredientsPrice
-      : RecipeFinderService.DONTCRAFT;
+    return ingredientsPrice < nodePrice ? ingredientsPrice : DONT_CRAFT;
   }
 
   // case not sell item;
@@ -100,7 +94,7 @@ export class PriceFinder {
     // use buy price to evaluate
     // todo add taxe percent
     const firstBuyOffer = itemListing.buys[0];
-    return firstBuyOffer ? firstBuyOffer.unit_price : PriceFinder.CANTBUY;
+    return firstBuyOffer ? firstBuyOffer.unit_price : CANT_BUY;
   }
 }
 
