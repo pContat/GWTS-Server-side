@@ -42,7 +42,7 @@ export class HTTPPoolExecutor {
     const asObservable = this.pendingRequest.asObservable();
 
     this.httpRequestPoolExecutor = asObservable.pipe(
-      tap(e => this.logger.debug(`incoming request: ${e.id} `)),
+      tap(e => this.logger.verbose(`incoming request: ${e.id} `)),
       // bufferCount(1), // Buffers the source Observable values until the size hits the maximum bufferSize given.
       bufferTime(1000, null, this.maxRequestPerSec), //Collect emitted values until provided time has passed,
       concatMap(data => {
@@ -70,7 +70,7 @@ export class HTTPPoolExecutor {
     const requestId = HTTPPoolExecutor.requestCount++;
     return new Promise((resolve, reject) => {
       const callback = () => {
-        this.logger.debug(
+        this.logger.verbose(
           `execute request: ${requestId} : ${url.substring(0, 60)}`,
         );
         return this.httpService.get(this.appendLangParam(url)).pipe(
@@ -86,7 +86,7 @@ export class HTTPPoolExecutor {
           filter(el => el.id === requestId),
           map(el => el.response as T),
           tap(() =>
-            this.logger.debug(`notify response for request: ${requestId}`),
+            this.logger.verbose(`notify response for request: ${requestId}`),
           ),
           first(),
         )
@@ -95,8 +95,9 @@ export class HTTPPoolExecutor {
             return resolve(v);
           },
           error: e => {
-            this.logger.error(`error in notifier for request: ${requestId}`);
-            console.error(e);
+            this.logger.error(
+              `error in notifier for request: ${requestId} : ${e?.response?.statusText} `,
+            );
             return reject(e);
           },
         });

@@ -66,7 +66,7 @@ export class GWApiService {
 
   /****** Trade Place  ****/
   async getCommerceListings(itemsIds: number[]): Promise<Listing[]> {
-    // splite the request into multiple request of 4 to avoid partial content status
+    // split the request into multiple request of max 4 to avoid partial content status
     const requestUriList = this.splitRequest(itemsIds);
     const requestPromise = requestUriList.map(idList =>
       this.handleAllListing(idList),
@@ -83,17 +83,16 @@ export class GWApiService {
       const result = await this.httpService.get<Listing[]>(
         this.listings + joinIds,
       );
-      // warning the api can ommit to return value if it considere a bad item id
+      // warning the api can omit to return value if it consider as a bad item id
       if (result.length === ids.length) {
         return result;
       }
       return CollectionUtils.ensureOrder({
-        keys: ids,
         docs: result,
+        keys: ids,
         prop: 'id',
       });
     } catch (error) {
-      console.log('in right catch ', error);
       // gw api return 404 if no listing for this item
       if (error?.response.status === 404) {
         this.logger.error(`no listing found item ${ids}`);

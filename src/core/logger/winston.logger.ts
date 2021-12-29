@@ -24,7 +24,7 @@ export class AppLogger extends ConsoleLogger {
       }
       return info;
     });
-
+    
     this.winstonLogger = createLogger({
       level: this.confService.get('LOG_LEVEL'),
       format: format.combine(

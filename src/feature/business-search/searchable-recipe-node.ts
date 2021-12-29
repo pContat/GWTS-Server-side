@@ -1,9 +1,6 @@
-// transform treeNodeToSearchableTreeNode
-import { isNil } from 'lodash';
 import { TreeNode } from '../recipe/type/tree-node';
-import { CANT_BUY, CANT_CRAFT, DONT_CRAFT } from './service/const';
-import { BuyableIngredient } from './type';
 
+/** @description  Tree that allow two way navigation : to children and to parent */
 export class SearchableRecipeNode<T> extends TreeNode<T> {
   public parent: SearchableRecipeNode<T> | undefined;
   public children: SearchableRecipeNode<T>[];
@@ -23,23 +20,4 @@ export class SearchableRecipeNode<T> extends TreeNode<T> {
   toString() {
     return this.data.toString();
   }
-}
-
-export function nodeToString(
-  node: SearchableRecipeNode<BuyableIngredient>,
-): string {
-  const buyPrice = node.data.originalBuyPrice
-    ? node.data.originalBuyPrice
-    : node.data.buyPrice;
-  let craft =
-    node.data.craftPrice === CANT_CRAFT ||
-    node.data.craftPrice === CANT_BUY ||
-    isNil(node.data.craftPrice)
-      ? 'KO'
-      : node.data.craftPrice;
-  if (node.data.craftPrice === DONT_CRAFT) {
-    craft = 'Not Worse';
-  }
-
-  return `${node.data.itemId} X ${node.data.count} (buy : ${buyPrice} | craft : ${craft}})`;
 }

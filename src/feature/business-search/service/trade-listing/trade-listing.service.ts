@@ -2,22 +2,23 @@ import { Injectable, Logger } from '@nestjs/common';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import DataLoader from 'dataloader';
 import { first, without } from 'lodash';
-import { getAllItemId } from '../../../recipe/ingredient-tree';
-import { ItemDao } from '../../../item/service/item.dao';
-import { CacheService } from '../../../../core/cache/cache.service';
 import { AsyncUtils } from '../../../../common/utils';
+import { CacheService } from '../../../../core/cache/cache.service';
 import { GuildWarsAPI } from '../../../gw-api/gw-api-type';
 import { GWApiService } from '../../../gw-api/gw-http-api.service';
+import { ItemDao } from '../../../item/service/item.dao';
+import { getAllItemId } from '../../../recipe/ingredient-tree';
 import { SearchableRecipeNode } from '../../searchable-recipe-node';
 
 import Listing = GuildWarsAPI.Listing;
 
-// will handle the listing cache and batch request with dataloader
+/** @description Will handle the listing request (with bath and cache to prevent ban) */
+
 @Injectable()
 export class TradeListingService {
-  logger = new Logger(TradeListingService.name);
+  private readonly  logger = new Logger(TradeListingService.name);
 
-  readonly byIdsLoader: DataLoader<number, GuildWarsAPI.Listing>;
+  private readonly byIdsLoader: DataLoader<number, GuildWarsAPI.Listing>;
 
   constructor(
     private readonly cacheService: CacheService,
@@ -35,7 +36,7 @@ export class TradeListingService {
     });
   }
 
-  public async getListings(ids: number[]): Promise<Listing[]> {
+  async getListings(ids: number[]): Promise<Listing[]> {
     const { missingIds, cache } = await this.findNonCachedKeys(ids);
     const listings = await this.gwApi.getCommerceListings(missingIds);
 
@@ -52,7 +53,7 @@ export class TradeListingService {
     return [...cache, ...listingList];
   }
 
-  public getListingsForTree(recipeTree: SearchableRecipeNode<any>) {
+  getListingsForTree(recipeTree: SearchableRecipeNode<any>) {
     const ingredientIds = getAllItemId(recipeTree);
     return this.getListings(ingredientIds);
   }
@@ -63,6 +64,7 @@ export class TradeListingService {
       const listings = await this.byIdsLoader.load(itemId);
       // if no listing it can be found in vendor_value /item
       if (!listings) {
+        // todo caution with vendor price here
         return await this.listingNotFoundHandler(itemId);
       }
       return listings;
@@ -70,18 +72,18 @@ export class TradeListingService {
   }
 
   private async findNonCachedKeys(ids: number[]) {
-    // todo : do race
+    // TODO : do race
     const cacheKeys = ids.map(this.listingCacheKey);
     const cachedListing = await this.cacheService.mget(cacheKeys);
     const excludeIds = cachedListing.map((listing: Listing) => listing?.id);
-    const toRequestId = without(ids, ...excludeIds);
+    const toRequestIds = without(ids, ...excludeIds);
     return {
       cache: cachedListing.filter(el => !!el),
-      missingIds: toRequestId,
+      missingIds: toRequestIds,
     };
   }
 
-  // todo : use mset
+  // TODO : use mset
   private async putListingsInCache(listings: Listing[]) {
     return await AsyncUtils.asyncForEach(listings, listing => {
       return this.cacheService.set(this.listingCacheKey(listing.id), listing);
@@ -93,7 +95,7 @@ export class TradeListingService {
     const price = await this.itemDao.getVendorPrice(itemId);
     return price === 0
       ? this.createEmptyListing(itemId)
-      : this.createFakeListing(itemId, price);
+      : this.createFakeNPCListing(itemId, price);
   }
 
   private createEmptyListing(itemId: number): Listing {
@@ -105,11 +107,11 @@ export class TradeListingService {
   }
 
   // some item can't be buy in trading post but to pnj
-  private createFakeListing(itemId: number, price: number): Listing {
+  private createFakeNPCListing(itemId: number, price: number): Listing {
     return {
       id: itemId,
       buys: [],
-      sells: [{ listings: 1, unit_price: price, quantity: 9999 }],
+      sells: [{ listings: 1, unit_price: price, quantity: 99999 }],
     };
   }
 

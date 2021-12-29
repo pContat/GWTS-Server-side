@@ -1,31 +1,28 @@
-import { Test } from '@nestjs/testing';
-import { CommonModule } from '../../../common/common.module';
-import { ItemModel } from '../../../item/model/item-model';
-import { ConfigModule } from '../../core/config/config.module';
+import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigurationModule } from '../../../../core/configuration/configuration.module';
 import { CoreModule } from '../../../../core/core.module';
 import { DatabaseModule } from '../../../../core/database/database.module';
 import { GwApiModule } from '../../../gw-api/gw-api.module';
-import { DealFinder } from '../deal/deal-finder.service';
-import { PriceFinder } from '../price-finder.service';
+import { ItemModule } from '../../../item/item.module';
+import { ItemModel } from '../../../item/model/item-model';
+import { ItemDao } from '../../../item/service/item.dao';
+import { PriceFinder } from '../price-estimation/price-finder.service';
+import { TradeListingService } from '../trade-listing/trade-listing.service';
 import { RecipeFinderService } from './recipe-finder.service';
-import { TradeListingService } from '../trade/trade-listing.service';
 
 describe('Recipe finder', () => {
   let recipeFinderService: RecipeFinderService;
+  let moduleRef: TestingModule;
+  let itemDao: ItemDao;
 
   beforeEach(async () => {
-    const moduleRef = await Test.createTestingModule({
-      providers: [
-        DealFinder,
-        PriceFinder,
-        RecipeFinderService,
-        TradeListingService,
-      ],
+    moduleRef = await Test.createTestingModule({
+      providers: [RecipeFinderService, PriceFinder, TradeListingService],
       imports: [
-        CommonModule,
+        ItemModule,
+        ConfigurationModule,
         GwApiModule,
         CoreModule,
-        ConfigModule,
         DatabaseModule,
       ],
     }).compile();
@@ -33,21 +30,25 @@ describe('Recipe finder', () => {
     recipeFinderService = moduleRef.get<RecipeFinderService>(
       RecipeFinderService,
     );
+
+    itemDao = moduleRef.get<ItemDao>(ItemDao);
   });
 
-  describe('non craftable object', () => {
+  afterEach(async () => {
+    await moduleRef.close();
+  });
+
+  describe('craftable object', () => {
     const itemId = 12992;
+
     it('create', async () => {
-      try {
-        const item = {};
-        const result = await recipeFinderService.getRecipeCraftList(
-          item as ItemModel,
-        );
-        //expect(result.creditNoteSellingItems.length).toEqual(2);
-      } catch (e) {
-        fail(e);
-      }
-    });
+      const item = await itemDao.findById(itemId, {
+        relationExpression: 'fromRecipe',
+      });
+      const result = await recipeFinderService.getRecipeCraftList(item);
+      console.log(result);
+      expect(result).toEqual(undefined);
+    }, 200000);
   });
 
   describe('craftable object', () => {

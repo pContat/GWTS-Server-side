@@ -29,7 +29,7 @@ export class RecipeModel extends BaseModel {
   type: string;
   chatLink: string;
   // all the receipt to craft this object
-  craftingTree: TreeNode<Ingredient>; // co
+  craftingTree: TreeNode<Ingredient>; // stored as json
 
   $formatDatabaseJson(json: object) {
     //postrgres : due to incompatibility between native array and json types, when setting an array (or a value that could be an array) as the value of a json or jsonb column, you should use JSON.stringify()

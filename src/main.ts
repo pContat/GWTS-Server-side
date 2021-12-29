@@ -1,11 +1,12 @@
 import { NestApplicationOptions } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ImportService } from './feature/business-import/import.service';
-import { ConfigurationService } from './core/configuration/configuration.service';
-import { AppLogger } from './core/logger/logger.service';
 import { isProduction } from './common/utils/configuration.utils';
+import { ConfigurationService } from './core/configuration/configuration.service';
 import { MigrationsService } from './core/database/services/migration.service';
+import { AppLogger } from './core/logger/winston.logger';
+import { ImportService } from './feature/business-import/import.service';
+import { DealFinder } from './feature/business-search/service/deal/deal-finder.service';
 import morgan = require('morgan');
 
 async function bootstrap() {
@@ -35,8 +36,8 @@ async function bootstrap() {
     appLogger.log(`import done`);
   }
 
-  /*const dealService = app.get(DealFinder);
-   await dealService.findDeal();*/
+  const dealService = app.get(DealFinder);
+  await dealService.findDeal();
 }
 
 (async () => {

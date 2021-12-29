@@ -6,13 +6,13 @@
 */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { ItemDao } from '../../../item/service/item.dao';
 import { AsyncUtils, FileUtils, TimeUtils } from '../../../../common/utils';
+import { ItemDao } from '../../../item/service/item.dao';
 import { defaultDealCriteria } from '../../conf/deal-critera';
 import { DealCriteria } from '../../type';
-import { FlippingFinderService } from '../flipping-finder.service';
 import { RecipeFinderService } from '../recipe/recipe-finder.service';
-import { TradeListingService } from '../trade/trade-listing.service';
+import { TradeListingService } from '../trade-listing/trade-listing.service';
+import { FlippingFinderService } from './flipping-finder.service';
 
 @Injectable()
 export class DealFinder {
@@ -60,7 +60,7 @@ export class DealFinder {
       matchingCriteriaItem,
       async item => {
         if (!(await this.doesMatchMinSellBuyRatio(item.id))) {
-          this.logger.log(`no minimum buy/sale requirement for ${item.id}`);
+          this.logger.log(`item ${item.id}: no minimum buy/sale requirement`);
           return;
         }
         const [craft, flip] = await Promise.all([

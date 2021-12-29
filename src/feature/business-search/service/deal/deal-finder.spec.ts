@@ -5,10 +5,10 @@ import { CoreModule } from '../../../../core/core.module';
 import { DatabaseModule } from '../../../../core/database/database.module';
 import { GwApiModule } from '../../../gw-api/gw-api.module';
 import { DealFinder } from './deal-finder.service';
-import { FlippingFinderService } from '../flipping-finder.service';
-import { PriceFinder } from '../price-finder.service';
+import { FlippingFinderService } from './flipping-finder.service';
+import { PriceFinder } from '../price-estimation/price-finder.service';
 import { RecipeFinderService } from '../recipe/recipe-finder.service';
-import { TradeListingService } from '../trade/trade-listing.service';
+import { TradeListingService } from '../trade-listing/trade-listing.service';
 
 describe('Deal finder', () => {
   let dealFinder: DealFinder;

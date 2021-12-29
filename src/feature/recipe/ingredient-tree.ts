@@ -48,7 +48,7 @@ export function buildRecipeTree(
   return root;
 }
 
-// get all ids to query commerce listing and define parent relationship
+/** @description get all ingredient ids of a tree */ 
 export function getAllItemId(root: TreeNode<Ingredient>): number[] {
   const stack: TreeNode<Ingredient>[] = [];
   stack.push(root);

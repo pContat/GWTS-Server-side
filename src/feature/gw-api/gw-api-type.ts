@@ -67,8 +67,11 @@ export namespace GuildWarsAPI {
   }
 
   export interface Buy {
-    listings: number; //The number of individual listings this object refers to (e.g. two players selling at the same price will end up in the same listing)
+    /** @description  The number of individual listings this object refers to (e.g. two players selling at the same price will end up in the same listing) */
+    listings: number;
+    /** @description   The sell offer or buy order price in coins. */
     unit_price: number;
+    /** @description   The amount of items being sold/bought in this listing. */
     quantity: number;
   }
 

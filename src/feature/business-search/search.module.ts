@@ -4,10 +4,10 @@ import { ItemModule } from '../item/item.module';
 import { RecipeModule } from '../recipe/recipe.module';
 import { SearchController } from './search.controller';
 import { DealFinder } from './service/deal/deal-finder.service';
-import { FlippingFinderService } from './service/flipping-finder.service';
-import { PriceFinder } from './service/price-finder.service';
+import { FlippingFinderService } from './service/deal/flipping-finder.service';
+import { PriceFinder } from './service/price-estimation/price-finder.service';
 import { RecipeFinderService } from './service/recipe/recipe-finder.service';
-import { TradeListingService } from './service/trade/trade-listing.service';
+import { TradeListingService } from './service/trade-listing/trade-listing.service';
 
 const services = [
   DealFinder,

@@ -1,22 +1,25 @@
-import { Test } from '@nestjs/testing';
-import { CommonModule } from '../../../common/common.module';
-import { ConfigModule } from '../../core/config/config.module';
+import { Test, TestingModule } from '@nestjs/testing';
+import { Connection, KNEX_CONNECTION } from '@willsoto/nestjs-objection';
+import { ConfigurationModule } from '../../../../core/configuration/configuration.module';
 import { CoreModule } from '../../../../core/core.module';
 import { DatabaseModule } from '../../../../core/database/database.module';
+import { NoOpLogger } from '../../../../core/logger/no-op.logger';
 import { GwApiModule } from '../../../gw-api/gw-api.module';
+import { ItemModule } from '../../../item/item.module';
 import { TradeListingService } from './trade-listing.service';
 
 describe('Recipe finder', () => {
   let tradeListingService: TradeListingService;
+  let moduleRef: TestingModule;
 
   beforeEach(async () => {
-    const moduleRef = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       providers: [TradeListingService],
       imports: [
-        CommonModule,
+        ItemModule,
+        ConfigurationModule,
         GwApiModule,
         CoreModule,
-        ConfigModule,
         DatabaseModule,
       ],
     }).compile();
@@ -24,6 +27,12 @@ describe('Recipe finder', () => {
     tradeListingService = moduleRef.get<TradeListingService>(
       TradeListingService,
     );
+    moduleRef.useLogger(new NoOpLogger());
+  });
+
+  afterEach(async () => {
+    const currentConnection = moduleRef.get<Connection>(KNEX_CONNECTION);
+    await moduleRef.close();
   });
 
   describe('non craftable object', () => {
@@ -40,7 +49,7 @@ describe('Recipe finder', () => {
       }
     });
 
-    it('multi', async () => {
+    it('multi non craftable', async () => {
       try {
         const result = await tradeListingService.getListings([70851, 70852]);
         expect(result.length).toEqual(2);

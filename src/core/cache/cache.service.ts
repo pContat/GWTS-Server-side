@@ -3,7 +3,6 @@ import { Cache, CachingConfig } from 'cache-manager';
 import { AsyncFunction, AsyncUtils } from '../../common/utils';
 
 @Injectable()
-@Injectable()
 export class CacheService {
   readonly log = new Logger(CacheService.name);
 

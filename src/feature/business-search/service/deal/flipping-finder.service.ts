@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { first } from 'lodash';
-import { ItemModel } from '../../item/model/item-model';
-import { ItemDao } from '../../item/service/item.dao';
-import { CacheService } from '../../../core/cache/cache.service';
-import { defaultDealCriteria } from '../conf/deal-critera';
-import { TradeListingService } from './trade/trade-listing.service';
+import { ItemModel } from '../../../item/model/item-model';
+import { ItemDao } from '../../../item/service/item.dao';
+import { CacheService } from '../../../../core/cache/cache.service';
+import { defaultDealCriteria } from '../../conf/deal-critera';
+import { TradeListingService } from '../trade-listing/trade-listing.service';
 
 @Injectable()
 export class FlippingFinderService {

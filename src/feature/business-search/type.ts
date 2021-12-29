@@ -1,14 +1,20 @@
 import { Ingredient } from '../item/type/type';
 
 export interface BuyableIngredient extends Ingredient {
-  originalBuyPrice: number;
   buyPrice: number;
-  craftPrice: number;
+
+  /** @description If a craft is found, the initial buy price is stored here */
+  originalBuyPrice?: number;
+  craftPrice?: number;
 }
 
 export interface RecipeResult {
+
   ingredients: BuyableIngredient[];
+
+  /** @description The buying price of the item*/
   initialPrice: number;
+  /** @description The price after the buying all craft item craft*/
   finalPrice: number;
   itemId: number;
 }

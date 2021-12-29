@@ -3,6 +3,7 @@ import { chunk, isNil } from 'lodash';
 import { AsyncFunction, AsyncUtils } from '../../common/utils';
 import { FileStorageInterface } from '../../core/storage/file-storage.interface';
 import { apiStorage } from '../../core/storage/storage-provider';
+import { craftingSupplies } from '../business-search/conf/deal-critera';
 import { GuildWarsAPI } from '../gw-api/gw-api-type';
 import { GWApiService } from '../gw-api/gw-http-api.service';
 import { ItemDao } from '../item/service/item.dao';
@@ -28,7 +29,7 @@ export class ImportService {
     @Inject(apiStorage) readonly storageService: FileStorageInterface,
   ) {
     this.recipeForItemCache = new Map();
-    this.canBePurchase = this.craftingSupplies();
+    this.canBePurchase = craftingSupplies;
   }
 
   async importItems() {
@@ -137,37 +138,6 @@ export class ImportService {
     } else {
       //this.logger.log(`no recipe for item ${item.id}`);
     }
-  }
-
-  // https://wiki.guildwars2.com/wiki/Crafting_Supplier
-  // description contain : "can be purchased from master craftsmen"
-  private craftingSupplies() {
-    return new Map([
-      [19704, 8],
-      [19750, 16],
-      [19924, 48],
-      [19792, 8],
-      [19789, 16],
-      [19794, 24],
-      [19793, 32],
-      [19791, 48],
-      [19790, 64],
-      [46747, 149],
-      [13010, 496],
-      [13006, 1480],
-      [13007, 5000],
-      [13008, 20000],
-      [13009, 100000],
-      [12157, 8],
-      [12151, 8],
-      [12158, 8],
-      [12153, 8],
-      [12155, 8],
-      [12156, 8],
-      [12324, 8],
-      [12136, 8],
-      [12271, 8],
-    ]);
   }
 
   private async queuedCall(items: any[], functionToCall: AsyncFunction) {
