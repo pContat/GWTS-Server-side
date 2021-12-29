@@ -1,11 +1,11 @@
 import { NestApplicationOptions } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ImportService } from './business-import/import.service';
+import { ImportService } from './feature/business-import/import.service';
 import { ConfigurationService } from './core/configuration/configuration.service';
 import { AppLogger } from './core/logger/logger.service';
-import { isProduction } from './core/utils/configuration.utils';
-import { MigrationsService } from './database/services/migration.service';
+import { isProduction } from './common/utils/configuration.utils';
+import { MigrationsService } from './core/database/services/migration.service';
 import morgan = require('morgan');
 
 async function bootstrap() {

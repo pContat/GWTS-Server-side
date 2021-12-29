@@ -16,10 +16,10 @@ function getDatabase() {
         port: process.env.DATABASE_PORT
       },
       migrations: {
-        directory: './src/database/migrations'
+        directory: './src/core/database/migrations'
       },
       seeds: {
-        directory: './src/database/seeds'
+        directory: './src/core/database/seeds'
       },
       pool: { min: 0, max: 7 }
     },
@@ -35,10 +35,10 @@ function getDatabase() {
         port: process.env.DATABASE_PORT
       },
       migrations: {
-        directory: './src/database/migrations'
+        directory: './src/core/database/migrations'
       },
       seeds: {
-        directory: './src/database/seeds'
+        directory: './src/core/database/seeds'
       },
       pool: { min: 0, max: 7 }
     },
@@ -56,10 +56,10 @@ function getDatabase() {
         max: 10
       },
       migrations: {
-        directory: './src/database/migrations'
+        directory: './src/core/database/migrations'
       },
       seeds: {
-        directory: './src/database/seeds'
+        directory: './src/core/database/seeds'
       }
     }
   };

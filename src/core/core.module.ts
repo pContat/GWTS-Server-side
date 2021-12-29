@@ -1,5 +1,5 @@
 import { CacheModule, Global, Module } from '@nestjs/common';
-import { storageProvider } from '../common/storage/storage-provider';
+import { storageProvider } from './storage/storage-provider';
 import { CacheService } from './cache/cache.service';
 import { AppLogger } from './logger/logger.service';
 

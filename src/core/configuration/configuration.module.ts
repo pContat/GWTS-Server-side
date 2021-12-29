@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { isProduction } from '../utils/configuration.utils';
+import { isProduction } from '../../common/utils/configuration.utils';
 import { ConfigurationService } from './configuration.service';
 import { validationSchema } from './configuration';
 

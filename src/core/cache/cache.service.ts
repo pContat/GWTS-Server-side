@@ -1,6 +1,6 @@
 import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
 import { Cache, CachingConfig } from 'cache-manager';
-import { AsyncFunction, AsyncUtils } from '../utils';
+import { AsyncFunction, AsyncUtils } from '../../common/utils';
 
 @Injectable()
 @Injectable()

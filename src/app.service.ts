@@ -2,15 +2,6 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
-
-    /*
-    const dbBuilder = new DBBuilder();
-    await dbBuilder.importItems();
-     */
-  }
-
   recipeBuilder() {
     /*(async function () {
 

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Knex } from 'knex';
 import * as config from '../../../knexfile';
-import { isProduction } from '../utils/configuration.utils';
+import { isProduction } from '../../common/utils/configuration.utils';
 import { AppConfiguration } from './configuration';
 
 export type LoggerLevel = 'debug' | 'info' | 'error' | 'warn';
