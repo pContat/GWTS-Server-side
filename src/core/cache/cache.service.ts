@@ -12,9 +12,7 @@ export class CacheService {
   constructor(
     @Inject(CACHE_MANAGER)
     private cacheManager: Cache & { mget?<T>(...args: any[]): Promise<any> },
-  ) {
-    console.log(cacheManager);
-  }
+  ) {}
 
   public registerCleanCallBack(cleanCallBack: AsyncFunction) {
     this.cleanCallBackList.push(cleanCallBack);
