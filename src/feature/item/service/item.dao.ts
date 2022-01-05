@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ObjectionCrudDao } from '../../../core/database/services/objection-crud.dao';
 import { ItemModel } from '../model/item-model';
 import { DealCriteria } from '../../business-search/type';
+import { isEmpty } from 'lodash';
 
 @Injectable()
 export class ItemDao extends ObjectionCrudDao<ItemModel> {
@@ -29,8 +30,6 @@ export class ItemDao extends ObjectionCrudDao<ItemModel> {
       .withGraphFetched('fromRecipe')
       .orderBy('id', 'desc');
 
-    //SELECT * FROM t_e_item WHERE 'AccountBound' = ANY (flags);
-    //SELECT flags FROM t_e_item WHERE NOT flags && ARRAY['HideSuffix', 'NoSell']::varchar[] ;
     if (criteria.doNotEvaluate.flags.length) {
       const flagsString = criteria.doNotEvaluate.flags
         .map(el => `'${el}'`)
@@ -38,17 +37,16 @@ export class ItemDao extends ObjectionCrudDao<ItemModel> {
       // && => have element in common
       builder.whereRaw(`NOT flags && ARRAY[${flagsString}]`);
     }
-    if (criteria.doNotEvaluate.types.length) {
+    if (!isEmpty(criteria.doNotEvaluate.types)) {
       builder.whereNotIn('type', criteria.doNotEvaluate.types);
     }
-    if (criteria.doNotEvaluate.rarity.length) {
+    if (!isEmpty(criteria.doNotEvaluate.rarity)) {
       builder.whereNotIn('rarity', criteria.doNotEvaluate.rarity);
     }
-    if (criteria.doNotEvaluate.itemList.length) {
-      builder.whereNotIn('id', criteria.doNotEvaluate.itemList);
+    if (!isEmpty(criteria.doNotEvaluate.itemBlacklist)) {
+      builder.whereNotIn('id', criteria.doNotEvaluate.itemBlacklist);
     }
 
-    // order by ids desc
     return builder;
   }
 }

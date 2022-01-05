@@ -1,6 +1,4 @@
 import { Test } from '@nestjs/testing';
-import { CommonModule } from '../../../common/common.module';
-import { ConfigModule } from '../../core/config/config.module';
 import { CoreModule } from '../../../../core/core.module';
 import { DatabaseModule } from '../../../../core/database/database.module';
 import { GwApiModule } from '../../../gw-api/gw-api.module';
@@ -9,6 +7,7 @@ import { FlippingFinderService } from './flipping-finder.service';
 import { PriceFinder } from '../price-estimation/price-finder.service';
 import { RecipeFinderService } from '../recipe/recipe-finder.service';
 import { TradeListingService } from '../trade-listing/trade-listing.service';
+import { ConfigModule } from '@nestjs/config';
 
 describe('Deal finder', () => {
   let dealFinder: DealFinder;
@@ -23,7 +22,6 @@ describe('Deal finder', () => {
         FlippingFinderService,
       ],
       imports: [
-        CommonModule,
         GwApiModule,
         CoreModule,
         ConfigModule,

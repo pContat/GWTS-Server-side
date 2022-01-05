@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigurationModule } from '../../../../core/configuration/configuration.module';
 import { CoreModule } from '../../../../core/core.module';
 import { DatabaseModule } from '../../../../core/database/database.module';
+import { AppLogger } from '../../../../core/logger/winston.logger';
 import { GwApiModule } from '../../../gw-api/gw-api.module';
 import { ItemModule } from '../../../item/item.module';
 import { ItemModel } from '../../../item/model/item-model';
@@ -26,7 +27,8 @@ describe('Recipe finder', () => {
         DatabaseModule,
       ],
     }).compile();
-
+    const appLogger = moduleRef.get(AppLogger);
+    moduleRef.useLogger(appLogger)
     recipeFinderService = moduleRef.get<RecipeFinderService>(
       RecipeFinderService,
     );
@@ -38,8 +40,9 @@ describe('Recipe finder', () => {
     await moduleRef.close();
   });
 
-  describe('craftable object', () => {
-    const itemId = 12992;
+  describe('non craftable item', () => {
+    const itemId = 95556;
+    //const itemId = 73839;
 
     it('create', async () => {
       const item = await itemDao.findById(itemId, {
@@ -52,7 +55,7 @@ describe('Recipe finder', () => {
   });
 
   describe('craftable object', () => {
-    const itemId = 10462;
+    const itemId = 73191;
     it('create', async () => {
       /*jest
         .spyOn(recipeFinderService, 'createCreditNoteInvoice')

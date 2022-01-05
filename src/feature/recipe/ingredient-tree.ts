@@ -19,6 +19,7 @@ function createRootTree(recipeForItem: Recipe): TreeNode<Ingredient> {
     count: 1,
     itemId: recipeForItem.outputItemId,
     isCraftable: true,
+    outputCountIfCraft : recipeForItem.outputItemCount
   } as Ingredient;
   const root = new TreeNode<Ingredient>(data); // 1 : output item id
   root.children.push(...recipeToNodes(recipeForItem)); //do not break reference

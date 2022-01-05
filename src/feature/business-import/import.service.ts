@@ -3,7 +3,7 @@ import { chunk, isNil } from 'lodash';
 import { AsyncFunction, AsyncUtils } from '../../common/utils';
 import { FileStorageInterface } from '../../core/storage/file-storage.interface';
 import { apiStorage } from '../../core/storage/storage-provider';
-import { craftingSupplies } from '../business-search/conf/deal-critera';
+import { craftingSupplies } from '../business-search/conf/deal-criteria';
 import { GuildWarsAPI } from '../gw-api/gw-api-type';
 import { GWApiService } from '../gw-api/gw-http-api.service';
 import { ItemDao } from '../item/service/item.dao';
@@ -104,7 +104,7 @@ export class ImportService {
       await this.recipeDao.bulkInsert(recipeList);
       await this.itemDao.bulkInsert(itemDocuments);
       this.logger.log(
-        `save recipe : ${recipeList.length}, item ${itemDocuments.length}`,
+        `saved recipe: ${recipeList.length}, saved item: ${itemDocuments.length}`,
       );
     } catch (err) {
       this.logger.error('Something went wrong during insert', err);
@@ -145,31 +145,4 @@ export class ImportService {
     const chunkedParam = chunk(items, this.padding);
     return AsyncUtils.parallelBatch(chunkedParam, functionToCall, 5);
   }
-
-  /*
-    {id: 19704, name: "Lump of Tin"}
-  {id: 19750, name: "Lump of Coal"}
-  {id: 19924, name: "Lump of Primordium"}
-  {id: 19792, name: "Spool of Jute Thread"}
-  {id: 19789, name: "Spool of Wool Thread"}
-  {id: 19794, name: "Spool of Cotton Thread"}
-  {id: 19793, name: "Spool of Linen Thread"}
-  {id: 19791, name: "Spool of Silk Thread"}
-  {id: 19790, name: "Spool of Gossamer Thread"}
-  {id: 46747, name: "Thermocatalytic Reagent"}
-  {id: 13010, name: "Minor Rune of Holding"}
-  {id: 13006, name: "Rune of Holding"}
-  {id: 13007, name: "Major Minor Rune of Holding"}
-  {id: 13008, name: "Greater Rune of Holding	"}
-  {id: 13009, name: "Superior Rune of Holding	"}
-  {id: 12157, name: "Jar of Vinegar "}
-  {id: 12151, name: "Packet of Baking Powder "}
-  {id: 12158, name: "Jar of Vegetable Oil "}
-  {id: 12153, name: "Packet of Salt "}
-  {id: 12155, name: "Bag of Sugar "}
-  {id: 12156, name: "Jug of Water "}
-  {id: 12324, name: "Bag of Starch "}
-  {id: 12136, name: "Bag of Flour "}
-  {id: 12271, name: "Bottle of Soy Sauce "}
-     */
 }

@@ -33,8 +33,12 @@ services:
       - 5432:5432
 
   redis:
-    image: 'redis:5.0.10-alpine'
+    image: 'redis:6.2.6-alpine'
     hostname: redis
+    # --save bump data into disk but appendonly is better in this case
+    command: redis-server --appendonly yes --loglevel warning
+    volumes:
+        - ./docker-data/redis:/data
     ports:
       - '6379:6379'
 

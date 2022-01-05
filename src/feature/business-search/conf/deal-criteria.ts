@@ -3,39 +3,19 @@ import { DealCriteria } from '../type';
 export const defaultDealCriteria = {
   minFactoryMarge: 0.15, //min % of marge gain
   minGain: 10000, //Minimum of gain
-  minimumNumberOfSale: 50, //Minimum of seller
-  minimumNumberOfBuy: 50, //Minimum of buyer
+  minimumNumberOfSale: 50, //Minimum of item in sale
+  minimumNumberOfBuy: 50, //Minimum of item in buy
   maxBuyPrice: -1, // (-1 : no limit)
   //Maximum of distinct compo to craft the object (-1 : no limit)
   maxCompo: -1,
 
-  // blacklist
   doNotEvaluate: {
     rarity: ['Junk', 'Basic', 'Ascended', 'Legendary'],
     flags: ['AccountBound', 'NoSell', 'SoulbindOnAcquire'],
     types: ['Container', 'CraftingMaterial ', 'Gathering'],
-    itemList: [
-      3993,
-      4909,
-      8587,
-      9225,
-      12132,
-      12610,
-      12623,
-      12663,
-      12697,
-      12703,
-      12705,
-      23893,
-      23311,
-      23325,
-      23757,
-      23411,
-      23987,
-      30034,
-      45238,
-      67185,
-      67344,
+    itemBlacklist: [
+      3993, 4909, 8587, 9225, 12132, 12610, 12623, 12663, 12697, 12703, 12705,
+      23893, 23311, 23325, 23757, 23411, 23987, 30034, 45238, 67185, 67344,
     ],
   },
 } as DealCriteria;
@@ -58,6 +38,8 @@ export const craftingSupplies = new Map([
   [13007, 5000],
   [13008, 20000],
   [13009, 100000],
+  // cook
+  [62942, 8],
   [12157, 8],
   [12151, 8],
   [12158, 8],
@@ -67,4 +49,5 @@ export const craftingSupplies = new Map([
   [12324, 8],
   [12136, 8],
   [12271, 8],
+  [70647, 10],
 ]);

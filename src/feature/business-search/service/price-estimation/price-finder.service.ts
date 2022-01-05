@@ -1,11 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { isEmpty, sum } from 'lodash';
+import { isEmpty, map } from 'lodash';
 import { GuildWarsAPI } from '../../../gw-api/gw-api-type';
 import { TreeNode } from '../../../recipe/type/tree-node';
-import { craftingSupplies } from '../../conf/deal-critera';
+import { craftingSupplies } from '../../conf/deal-criteria';
 import { SearchableRecipeNode } from '../../searchable-recipe-node';
-import { BuyableIngredient } from '../../type';
-import { CANT_BUY, MISSING_INGREDIENT, DONT_CRAFT } from '../const';
+import { BuyableIngredient, BuyingStatus, CraftStatus } from '../../type';
 import { TradeListingService } from '../trade-listing/trade-listing.service';
 import Listing = GuildWarsAPI.Listing;
 
@@ -40,7 +39,7 @@ export class PriceFinder {
         numberToBuy -= stackQuantity;
         i++;
         if (!itemListing.sells[i]) {
-          return CANT_BUY;
+          return BuyingStatus.CANT_BUY;
         }
       } else {
         total += stackUnitPrice * numberToBuy;
@@ -50,24 +49,21 @@ export class PriceFinder {
     return total;
   }
 
-  // case : one of children can't be buy
-  // case : can't buy parent
-  // return the price to craft the item
-  // will tell if buy or sale
-  // unit test me
   public findCraftablePriceForNode(
     item: SearchableRecipeNode<BuyableIngredient>,
   ): number {
     const ingredientsPrice = this.findCraftPrice(item);
-    if (ingredientsPrice === MISSING_INGREDIENT) {
-      return MISSING_INGREDIENT;
+    if (ingredientsPrice === CraftStatus.MISSING_INGREDIENT) {
+      return CraftStatus.MISSING_INGREDIENT;
     }
     const nodePrice = item.data.buyPrice;
-    if (nodePrice === CANT_BUY) {
+    if (nodePrice === BuyingStatus.CANT_BUY) {
       // case where we can craft a soulbind item
       return ingredientsPrice;
     }
-    return ingredientsPrice < nodePrice ? ingredientsPrice : DONT_CRAFT;
+    return ingredientsPrice < nodePrice
+      ? ingredientsPrice
+      : CraftStatus.NOT_WORTH;
   }
 
   // case not sell item;
@@ -81,21 +77,34 @@ export class PriceFinder {
       : CANT_BUY;
       */
     // for now prefer for a can't buy
-    return CANT_BUY;
+    return BuyingStatus.CANT_BUY;
   }
 
-  // determinate the total price if we want to buy this item
+  // determinate the total price if we want to craft this item
   // note : the item should be hydrated from recipe finder before
   private findCraftPrice(item: TreeNode<BuyableIngredient>): number {
-    const ingredientsPrice = item.children.map(child => child.data.buyPrice);
-    const cannotCraft = ingredientsPrice.find(price => price === CANT_BUY);
-    if (!isEmpty(cannotCraft)) {
+    const ingredients = map(item.children, 'data');
+    const cannotCraft = ingredients.find(
+      (ingredient) =>
+        ingredient.buyPrice === BuyingStatus.CANT_BUY &&
+        (!ingredient.craftPrice || ingredient.craftPrice < 0),
+    );
+    if (cannotCraft) {
       this.logger.warn(
         `item ${item.data.itemId}: missing ingredient availability`,
       );
-      return MISSING_INGREDIENT;
+      return CraftStatus.MISSING_INGREDIENT;
     }
-    return sum(ingredientsPrice);
+
+    // exception if item is not buyable but craftable
+    return ingredients.reduce((accumulator, currentValue) => {
+      const priceInConsideration =
+        currentValue.buyPrice === BuyingStatus.CANT_BUY
+          ? currentValue.craftPrice
+          : currentValue.buyPrice;
+      accumulator += priceInConsideration;
+      return accumulator;
+    }, 0);
   }
 }
 

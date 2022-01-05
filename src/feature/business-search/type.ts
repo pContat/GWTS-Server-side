@@ -1,17 +1,14 @@
 import { Ingredient } from '../item/type/type';
 
 export interface BuyableIngredient extends Ingredient {
-  buyPrice: number;
-
-  /** @description If a craft is found, the initial buy price is stored here */
-  originalBuyPrice?: number;
-  craftPrice?: number;
+  /** @description the current TP buy price  */
+  buyPrice: number | BuyingStatus;
+  /** @description If an item is craftable, the craft price is stored here */
+  craftPrice?: number | CraftStatus;
 }
 
 export interface RecipeResult {
-
   ingredients: BuyableIngredient[];
-
   /** @description The buying price of the item*/
   initialPrice: number;
   /** @description The price after the buying all craft item craft*/
@@ -29,6 +26,18 @@ export interface DealCriteria {
     rarity: string[];
     flags: string[];
     types: string[];
-    itemList: number[];
+    itemBlacklist: number[];
   };
+}
+
+export enum CraftStatus {
+  /** * @description : if the crafting price is > than buying the item directly */
+  NOT_WORTH = -3,
+  /** @description : if the item can be craft but there is no buying item in trading post  */
+  MISSING_INGREDIENT = -2,
+}
+
+export enum BuyingStatus {
+  /** * @description : if there is no sale listing for this item  */
+  CANT_BUY = -1,
 }

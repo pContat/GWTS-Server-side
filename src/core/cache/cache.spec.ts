@@ -14,7 +14,7 @@ describe('Cache service', () => {
         CacheModule.register({
           store: 'memory',
           max: 1000,
-          ttl: 60 * 60 * 23 /* 23 hours */,
+          ttl: 60 * 60 * 23,
         }),
       ],
     }).compile();

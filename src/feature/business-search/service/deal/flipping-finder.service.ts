@@ -1,9 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { first } from 'lodash';
 import { ItemModel } from '../../../item/model/item-model';
-import { ItemDao } from '../../../item/service/item.dao';
-import { CacheService } from '../../../../core/cache/cache.service';
-import { defaultDealCriteria } from '../../conf/deal-critera';
+import { defaultDealCriteria } from '../../conf/deal-criteria';
 import { TradeListingService } from '../trade-listing/trade-listing.service';
 
 @Injectable()
@@ -11,15 +9,9 @@ export class FlippingFinderService {
   logger = new Logger(FlippingFinderService.name);
   configuration = defaultDealCriteria;
 
-  constructor(
-    private readonly cacheService: CacheService,
-    private readonly itemDao: ItemDao,
-    private readonly tradeListingService: TradeListingService,
-  ) {}
+  constructor(private readonly tradeListingService: TradeListingService) {}
 
-  async shouldFlipItem(
-    item: ItemModel,
-  ): Promise<
+  async shouldFlipItem(item: ItemModel): Promise<
     | {
         itemId: number;
         buy: number;
@@ -38,7 +30,7 @@ export class FlippingFinderService {
     const possibleGainIfFlipping = (sellPrice - buyPrice) * 0.85;
     if (possibleGainIfFlipping < this.configuration.minGain) {
       this.logger.debug(
-        `min gain not reached for ${item.id} : ${possibleGainIfFlipping}`,
+        `item ${item.id}: min gain not reached ${possibleGainIfFlipping}`,
       );
       return;
     }

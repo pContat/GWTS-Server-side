@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { clone, isEmpty, isNil, map } from 'lodash';
+import { clone, first, isEmpty, isNil, map } from 'lodash';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { ItemModel } from '../../../item/model/item-model';
 import { printRecipeTree } from '../../../recipe/print-tree';
@@ -13,10 +13,10 @@ import {
 import { TradeListingService } from '../trade-listing/trade-listing.service';
 
 /*
-
 TODO : 
 - add overcomponent ( rest after craft)
 - add price per item
+- min sale / buy ratio check
 */
 @Injectable()
 export class RecipeFinderService {
@@ -36,9 +36,8 @@ export class RecipeFinderService {
     }
     const recipeTree = this.prepareSearchTree(item);
     // DFS traversal : define all buy price for each node if we want to craft it
-    const buyPriceEvaluationNodeList: SearchableRecipeNode<
-      BuyableIngredient
-    >[] = [];
+    const buyPriceEvaluationNodeList: SearchableRecipeNode<BuyableIngredient>[] =
+      [];
     // bottom top traversal : define if crafting is better than buying
     const craftScanStack: SearchableRecipeNode<BuyableIngredient>[] = [];
 
@@ -47,7 +46,8 @@ export class RecipeFinderService {
     // optimization purpose : prepare all the listing cache before traversal
     await this.tradeListingService.getListingsForTree(recipeTree);
 
-    // TODO :  do not bother if item do not match min sell / buy ratio  we do not want to create an item that does not sell
+    // TODO : do not bother if item do not match minimum sell / buy ratio
+    // we do not want to create an item that does not sell
 
     // the price of the item if we want to buy it
     const initialItemPrice = await this.priceFinder.getPriceIfTPBuy(item.id, 1);
@@ -62,27 +62,31 @@ export class RecipeFinderService {
           'should not happen, what did you do with the requiredPriceEvaluationNodeList ?',
         );
       }
-      // if another tree scan already set the price do not bother recomputing it
+      currentItem.data.buyPrice = await this.getBuyPrice(currentItem);
+      buyPriceEvaluationNodeList.push(...currentItem.children);
+      // add evaluation for all children
+      // if another tree scan already compute the craft price do not bother recomputing it
       // the shortcut will exist or not if not interesting
-      const existingPrice = await this.getExistingCraftPriceScan(currentItem.data.itemId);
-      if (!isNil(existingPrice)) {
-        currentItem.data.buyPrice = existingPrice;
+      const existingCraftPrice = await this.getExistingCraftPriceScan(
+        currentItem.data.itemId,
+      );
+      if (!isNil(existingCraftPrice)) {
+        currentItem.data.craftPrice = existingCraftPrice;
         this.logger.debug(
           `item ${currentItem.data.itemId}: prevent craft evaluation`,
         );
         continue;
-      }
-      currentItem.data.buyPrice = await this.getBuyPrice(currentItem);
-      // add evaluation for all children
-      buyPriceEvaluationNodeList.push(...currentItem.children);
-      if (currentItem.data.isCraftable || !isEmpty(currentItem.children)) {
+      } else if (
+        currentItem.data.isCraftable ||
+        !isEmpty(currentItem.children)
+      ) {
         // only one children is required for craft scan given that we will retrieve all siblings
-        craftScanStack.push(currentItem.children[0]);
+        craftScanStack.push(first(currentItem.children));
       }
     }
 
     // step2 : once all buy price are define, for each node, scan if crafting the item is better than buying it
-    while (!isEmpty(craftScanStack.length)) {
+    while (!isEmpty(craftScanStack)) {
       const currentItem = craftScanStack.pop();
       if (!currentItem) {
         throw new Error('what did you do with the craftStack');
@@ -98,16 +102,12 @@ export class RecipeFinderService {
         this.setCraftPriceScan(parentNode.itemId, craftPrice);
         parentNode.craftPrice = craftPrice;
 
-        if (craftPrice > 0) {
-          parentNode.originalBuyPrice = parentNode.buyPrice;
+        const craftIsValuable = craftPrice > 0;
+        if (craftIsValuable) {
           // WARN : scan sequence can possibly change price estimation
-          parentNode.buyPrice = craftPrice; // for other scan
-
           this.logger.log(
             `shortcut found for item ${parentNode.itemId} : ${parentNode.craftPrice}`,
           );
-          // maybe store it in db ?
-          // check if it can be serialized
           // set the parent as the shortcut if the price is interesting
           // meaning : create the parent with child ingredient is more interesting
           const childrenIngredient = map(currentItem.parent.children, 'data');
@@ -120,12 +120,15 @@ export class RecipeFinderService {
 
     this.logger.debug('\r\n' + printRecipeTree(recipeTree));
 
-    // step3 : final price
+    // step3 : final price estimation
     const finalIngredientList = await this.recursiveShortcutResolution([
       recipeTree.data,
     ]);
-    if (finalIngredientList[0].itemId === recipeTree.data.itemId) {
-      this.logger.log( `item ${recipeTree.data.itemId}: no best recipe found`);
+
+    const noRecipeFound =
+      first(finalIngredientList).itemId === recipeTree.data.itemId;
+    if (noRecipeFound) {
+      this.logger.log(`item ${recipeTree.data.itemId}: no best recipe found`);
       return undefined;
     }
 
@@ -161,9 +164,8 @@ export class RecipeFinderService {
 
   /** @description Transform the recipe from the item into a searchable tree that allow two way navigation*/
   private prepareSearchTree(item: ItemModel) {
-    const recipeTree = item.fromRecipe.craftingTree as TreeNode<
-      BuyableIngredient
-    >;
+    const recipeTree = item.fromRecipe
+      .craftingTree as TreeNode<BuyableIngredient>;
     return new SearchableRecipeNode(recipeTree);
   }
 
@@ -176,6 +178,13 @@ export class RecipeFinderService {
         (currentItem.data.count * currentItem.parent.data.count) /
         currentItem.parent.data.outputCountIfCraft
       );
+    }
+    // case when we need 2 item but the parent craft can produce 5 item
+    if (currentItem.data.count < 1) {
+      return 1;
+      // TODO add overcomponent
+      // add warning with sell price
+      // if( qtyToBuy /currentItem.parent.data.outputCountIfCraft ) < 1 we will have oversupply
     }
     return currentItem.data.count;
   }
@@ -206,7 +215,9 @@ export class RecipeFinderService {
     return this.cacheService.set(this.shortcutCacheKey(itemId), buyableList);
   }
 
-  public getCraftShortcut(itemId: number): Promise<BuyableIngredient[] | undefined> {
+  public getCraftShortcut(
+    itemId: number,
+  ): Promise<BuyableIngredient[] | undefined> {
     return this.cacheService.get<BuyableIngredient[]>(
       this.shortcutCacheKey(itemId),
       () => undefined,
@@ -217,13 +228,6 @@ export class RecipeFinderService {
     currentItem: SearchableRecipeNode<BuyableIngredient>,
   ) {
     let quantityToBuy = this.getQuantityToBuy(currentItem);
-    // need 2 item but the parent craft can produce 5 item
-    if (quantityToBuy < 1) {
-      quantityToBuy = 1;
-      // TODO add overcomponent
-      // add warning with sell price
-      // if( qtyToBuy /currentItem.parent.data.outputCountIfCraft ) < 1 we will have oversupply
-    }
     return await this.priceFinder.getPriceIfTPBuy(
       currentItem.data.itemId,
       quantityToBuy,

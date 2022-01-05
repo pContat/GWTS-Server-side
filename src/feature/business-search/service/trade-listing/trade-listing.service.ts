@@ -78,7 +78,7 @@ export class TradeListingService {
     const excludeIds = cachedListing.map((listing: Listing) => listing?.id);
     const toRequestIds = without(ids, ...excludeIds);
     return {
-      cache: cachedListing.filter(el => !!el),
+      cache: cachedListing.filter(el => !!el) as Listing[],
       missingIds: toRequestIds,
     };
   }

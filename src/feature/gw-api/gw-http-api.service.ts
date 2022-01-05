@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { chunk, flatten, isEmpty } from 'lodash';
-import { CollectionUtils } from '../../common/utils';
+import { AsyncUtils, CollectionUtils } from '../../common/utils';
 import { GuildWarsAPI } from './gw-api-type';
 import { HTTPPoolExecutor } from './http-pool-executor';
 import ReceiptDetail = GuildWarsAPI.RecipeDetail;
@@ -71,8 +71,8 @@ export class GWApiService {
     const requestPromise = requestUriList.map(idList =>
       this.handleAllListing(idList),
     );
-    const responseArray: Listing[][] = await Promise.all(requestPromise);
-    //flattenArray.forEach(sortListingByPrice);
+    // if a listing failed , everything failed
+    const responseArray: Listing[][] = await AsyncUtils.settledAll(requestPromise);
     // suppose to be sorted from documentation https://wiki.guildwars2.com/wiki/API:2/commerce/listings
     return flatten(responseArray);
   }
@@ -94,7 +94,8 @@ export class GWApiService {
       });
     } catch (error) {
       // gw api return 404 if no listing for this item
-      if (error?.response.status === 404) {
+      // response is not available if timeout
+      if (error?.response?.status === 404) {
         this.logger.error(`no listing found item ${ids}`);
         return Array(ids.length).fill(undefined);
       }

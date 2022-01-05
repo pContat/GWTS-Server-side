@@ -1,5 +1,5 @@
 import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
-import { Cache, CachingConfig } from 'cache-manager';
+import { Cache, CachingConfig, Store } from 'cache-manager';
 import { AsyncFunction, AsyncUtils } from '../../common/utils';
 
 @Injectable()
@@ -10,7 +10,10 @@ export class CacheService {
 
   constructor(
     @Inject(CACHE_MANAGER)
-    private cacheManager: Cache & { mget?<T>(...args: any[]): Promise<any> },
+    private cacheManager: Cache & {
+      mget?<T>(...args: any[]): Promise<any>;
+      store: Store & { getClient(): any };
+    },
   ) {}
 
   public registerCleanCallBack(cleanCallBack: AsyncFunction) {
@@ -27,7 +30,7 @@ export class CacheService {
     key: string,
     callbackIfNotFound: AsyncFunction,
   ): Promise<T> {
-    this.log.debug(`get key${key}`);
+    this.log.verbose(`get key ${key}`);
     return this.cacheManager.wrap(key, callbackIfNotFound);
   }
 
@@ -35,16 +38,19 @@ export class CacheService {
     key: string,
     value: any,
     options?: CachingConfig,
-  ): Promise<any> {
-    this.log.debug(`set key ${key}`);
+  ): Promise<string> {
+    this.log.verbose(`set key ${key}`);
     return this.cacheManager.set(key, value, options);
   }
 
-  public async mget(
+  public async mget<T>(
     keys: string[],
     callbackIfNotFound?: AsyncFunction,
-  ): Promise<any> {
-    this.log.debug(`get mkeys ${keys.toString()}`);
-    return this.cacheManager.mget(...keys);
+  ): Promise<T[]> {
+    // ioredis cache manager does not expose mget but is present from redis client
+    const mgetMethod =
+      this.cacheManager.mget || this.cacheManager.store?.getClient()?.mget.bind(this.cacheManager.store?.getClient());
+    this.log.verbose(`get mkeys ${keys.toString()}`);
+    return mgetMethod(...keys);
   }
 }

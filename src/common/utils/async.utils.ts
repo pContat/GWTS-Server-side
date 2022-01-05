@@ -4,11 +4,18 @@ import { Observable } from 'rxjs';
 export type AsyncFunction = (...args: any[]) => Promise<any>;
 export type ObservableFunction = (...args: any[]) => Observable<any>;
 export type TypedAsyncFunction<T, U> = (...args: T[]) => Promise<U>;
-export type TypedAsyncMapper<T, U> = (value: T, index: number, array: T[]) => Promise<U>;
+export type TypedAsyncMapper<T, U> = (
+  value: T,
+  index: number,
+  array: T[],
+) => Promise<U>;
 
 export class AsyncUtils {
   // apply the callback with the given array of param
-  static async pseries<T>(params: T[], callBack: AsyncFunction): Promise<unknown> {
+  static async pseries<T>(
+    params: T[],
+    callBack: AsyncFunction,
+  ): Promise<unknown> {
     return params.reduce((promise, item) => {
       return promise.then(() => callBack(item));
     }, Promise.resolve());
@@ -21,11 +28,16 @@ export class AsyncUtils {
   }
 
   static async pAll(factoryList: AsyncFunction[]) {
-    const pendingPromiseList = factoryList.map((asyncFunction) => asyncFunction());
+    const pendingPromiseList = factoryList.map((asyncFunction) =>
+      asyncFunction(),
+    );
     return Promise.all(pendingPromiseList);
   }
 
-  static async asyncForEach<T, U>(array: T[], callback: TypedAsyncMapper<T, U>) {
+  static async asyncForEach<T, U>(
+    array: T[],
+    callback: TypedAsyncMapper<T, U>,
+  ) {
     const promiseList = array.map(callback);
     return Promise.all(promiseList);
   }
@@ -33,7 +45,7 @@ export class AsyncUtils {
   static async parallelBatch<T, U>(
     allParameters: T[],
     mapper: TypedAsyncMapper<T, U>,
-    batchSize: number
+    batchSize: number,
   ): Promise<U[]> {
     const copyParam = cloneDeep(allParameters);
     const finalResult = [];
@@ -49,7 +61,8 @@ export class AsyncUtils {
   static async serieBatch(functionStacks: AsyncFunction[], batchSize: number) {
     return chunk(functionStacks, batchSize).map((batch) => {
       // eslint-disable-next-line @typescript-eslint/ban-types
-      return async () => Promise.all(batch.map((request: Function) => request()));
+      return async () =>
+        Promise.all(batch.map((request: Function) => request()));
     });
   }
 
@@ -57,18 +70,25 @@ export class AsyncUtils {
   static async reflectedParallelBatch(
     allParameters: any[],
     callBack: AsyncFunction,
-    batchSize: number
+    batchSize: number,
   ) {
     const finalResult = [];
     while (allParameters.length > 0) {
       const params = allParameters.splice(0, batchSize);
       // eslint-disable-next-line no-await-in-loop
       const batchResult = await Promise.all(
-        params.map((param) => AsyncUtils.reflect(callBack(param)))
+        params.map((param) => AsyncUtils.reflect(callBack(param))),
       );
       finalResult.push(...batchResult);
     }
     return finalResult;
+  }
+
+  static async settledAll<T>(args: Promise<T>[]) {
+    const response = await Promise.allSettled(args);
+    return response
+      .filter((el) => el.status == 'fulfilled')
+      .map((el: PromiseFulfilledResult<Awaited<T>>) => el.value);
   }
 
   // do not stop promise.all even if one reject
@@ -79,7 +99,7 @@ export class AsyncUtils {
       },
       function (e: any) {
         return { e: e.message || e, status: 'rejected' };
-      }
+      },
     );
   }
 }

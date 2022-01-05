@@ -5,11 +5,11 @@ import { DatabaseModule } from '../../../../core/database/database.module';
 import { NoOpLogger } from '../../../../core/logger/no-op.logger';
 import { GwApiModule } from '../../../gw-api/gw-api.module';
 import { ItemModule } from '../../../item/item.module';
-import { CANT_BUY } from '../const';
+import { BuyingStatus } from '../../type';
 import { TradeListingService } from '../trade-listing/trade-listing.service';
 import { PriceFinder } from './price-finder.service';
 
-describe('Recipe finder', () => {
+describe('Price finder', () => {
   let priceFinder: PriceFinder;
   let moduleRef: TestingModule;
   let listingService: TradeListingService;
@@ -47,7 +47,7 @@ describe('Recipe finder', () => {
         }),
       );
       const result = await priceFinder.getPriceIfTPBuy(itemId, 1);
-      expect(result).toEqual(CANT_BUY);
+      expect(result).toEqual(BuyingStatus.CANT_BUY);
     });
 
     it('buyable to npc item', async () => {
@@ -79,7 +79,7 @@ describe('Recipe finder', () => {
         }),
       );
       const result = await priceFinder.getPriceIfTPBuy(itemId, 2);
-      expect(result).toEqual(CANT_BUY);
+      expect(result).toEqual(BuyingStatus.CANT_BUY);
     });
 
     it('not sale but buy listing', async () => {
@@ -92,7 +92,7 @@ describe('Recipe finder', () => {
         }),
       );
       const result = await priceFinder.getPriceIfTPBuy(itemId, 1);
-      expect(result).toEqual(CANT_BUY);
+      expect(result).toEqual(BuyingStatus.CANT_BUY);
     });
   });
 
