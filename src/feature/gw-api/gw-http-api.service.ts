@@ -9,10 +9,9 @@ import Listing = GuildWarsAPI.Listing;
 import Price = GuildWarsAPI.Price;
 import RecipeDetail = GuildWarsAPI.RecipeDetail;
 
-// todo add debug validator to check how many time an item is called
 @Injectable()
 export class GWApiService {
-  logger = new Logger(GWApiService.name);
+  private readonly logger = new Logger(GWApiService.name);
   private readonly lang = 'fr';
   private readonly baseURL = 'https://api.guildwars2.com/v2';
   private readonly recipes = `${this.baseURL}/recipes`;
@@ -20,7 +19,7 @@ export class GWApiService {
   private readonly items = `${this.baseURL}/items`;
   private readonly listings = `${this.baseURL}/commerce/listings`;
   private readonly prices = `${this.baseURL}/commerce/prices`;
-  private readonly maxIdPerRequest = 15; //more id per request seams too much
+  private readonly maxIdsPerRequest = 15; //more id per request seams too much
 
   constructor(private readonly httpService: HTTPPoolExecutor) {}
 
@@ -49,13 +48,12 @@ export class GWApiService {
     );
   }
 
-  //Return information of multiple item
   getItemsDetail(itemsIds: number[]): Promise<ItemDetail[]> {
     const ids = this.buildIdParams(itemsIds);
     return this.httpService.get(this.appendLangParam(this.items + ids));
   }
 
-  //Search for recipe that create 'item_id''
+  /** @description Search for recipe that create 'item_id' */
   async recipeFor(itemId: number) {
     const uri = `${this.recipeSearch}${itemId}`;
     const body = await this.httpService.get(this.appendLangParam(uri));
@@ -69,12 +67,12 @@ export class GWApiService {
   async getCommerceListings(
     itemsIds: number[],
   ): Promise<Listing[] | undefined> {
-    // split the request into multiple request of max 4 to avoid partial content status
+    // split the request into multiple request to avoid partial content status
     const requestUriList = this.splitRequest(itemsIds);
     const requestPromise = requestUriList.map((idList) =>
       this.handleAllListing(idList),
     );
-    // if a listing failed , everything failed
+    // if a listing failed, everything failed
     const responseArray: Listing[][] = await AsyncUtils.settledAll(
       requestPromise,
     );
@@ -103,11 +101,9 @@ export class GWApiService {
   }
 
   sortListingByPrice(itemListing: Listing) {
-    // croissant
     itemListing.buys = itemListing.buys.sort(
       (x, y) => x.unit_price - y.unit_price,
     );
-    // decroissant
     itemListing.sells = itemListing.sells.sort(
       (x, y) => y.unit_price - x.unit_price,
     );
@@ -127,7 +123,7 @@ export class GWApiService {
       // gw api return 404 if no listing for this item
       // response is not available if timeout
       if (error?.response?.status === 404) {
-        this.logger.error(`no listing found item ${ids}`);
+        this.logger.error(`item ${ids.join(',')}: no listing found `);
         return Array(ids.length).fill(undefined);
       }
       throw error;
@@ -135,7 +131,7 @@ export class GWApiService {
   }
 
   private splitRequest(ids: number[]): number[][] {
-    return chunk(ids, this.maxIdPerRequest);
+    return chunk(ids, this.maxIdsPerRequest);
   }
 
   private buildIdParams(ids: number[]) {
