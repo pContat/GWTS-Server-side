@@ -41,7 +41,7 @@ describe('Recipe finder', () => {
   });
 
   describe('non craftable item', () => {
-    const itemId = 95556;
+    const itemId = 93165;
     //const itemId = 73839;
 
     it('create', async () => {

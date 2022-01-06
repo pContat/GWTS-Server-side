@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { isNil } from '@nestjs/common/utils/shared.utils';
 import DataLoader from 'dataloader';
-import { first, without } from 'lodash';
-import { AsyncUtils } from '../../../../common/utils';
+import { without } from 'lodash';
+import { AsyncUtils, CollectionUtils } from '../../../../common/utils';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { GuildWarsAPI } from '../../../gw-api/gw-api-type';
 import { GWApiService } from '../../../gw-api/gw-http-api.service';
@@ -16,7 +16,7 @@ import Listing = GuildWarsAPI.Listing;
 
 @Injectable()
 export class TradeListingService {
-  private readonly  logger = new Logger(TradeListingService.name);
+  private readonly logger = new Logger(TradeListingService.name);
 
   private readonly byIdsLoader: DataLoader<number, GuildWarsAPI.Listing>;
 
@@ -26,13 +26,15 @@ export class TradeListingService {
     private readonly gwApi: GWApiService,
   ) {
     this.byIdsLoader = new DataLoader(async (keys: number[]) => {
+      this.logger.verbose('by id loader ' + keys.length);
       // use this instead method instead of use cache false to get unique id in keys
       this.byIdsLoader.clearAll();
-      if (keys.length === 1) {
-        const response = await this.gwApi.getCommerceListing(first(keys));
-        return [response];
-      }
-      return await this.gwApi.getCommerceListings(keys);
+      const result = await this.gwApi.getCommerceListings(keys);
+      return CollectionUtils.ensureOrder({
+        docs: result,
+        keys,
+        prop: 'id',
+      });
     });
   }
 
@@ -53,11 +55,6 @@ export class TradeListingService {
     return [...cache, ...listingList];
   }
 
-  getListingsForTree(recipeTree: SearchableRecipeNode<any>) {
-    const ingredientIds = getAllItemId(recipeTree);
-    return this.getListings(ingredientIds);
-  }
-
   async getListing(itemId: number): Promise<Listing> {
     const cacheKey = this.listingCacheKey(itemId);
     return await this.cacheService.get<Listing>(cacheKey, async () => {
@@ -71,21 +68,25 @@ export class TradeListingService {
     });
   }
 
+  getListingsForTree(recipeTree: SearchableRecipeNode<any>) {
+    const ingredientIds = getAllItemId(recipeTree);
+    return this.getListings(ingredientIds);
+  }
+
   private async findNonCachedKeys(ids: number[]) {
-    // TODO : do race
     const cacheKeys = ids.map(this.listingCacheKey);
     const cachedListing = await this.cacheService.mget(cacheKeys);
     const excludeIds = cachedListing.map((listing: Listing) => listing?.id);
     const toRequestIds = without(ids, ...excludeIds);
     return {
-      cache: cachedListing.filter(el => !!el) as Listing[],
+      cache: cachedListing.filter((el) => !!el) as Listing[],
       missingIds: toRequestIds,
     };
   }
 
   // TODO : use mset
   private async putListingsInCache(listings: Listing[]) {
-    return await AsyncUtils.asyncForEach(listings, listing => {
+    return await AsyncUtils.asyncForEach(listings, (listing) => {
       return this.cacheService.set(this.listingCacheKey(listing.id), listing);
     });
   }

@@ -10,6 +10,8 @@ export type TypedAsyncMapper<T, U> = (
   array: T[],
 ) => Promise<U>;
 
+const voidFunction = () => {};
+
 export class AsyncUtils {
   // apply the callback with the given array of param
   static async pseries<T>(
@@ -42,10 +44,11 @@ export class AsyncUtils {
     return Promise.all(promiseList);
   }
 
-  static async parallelBatch<T, U>(
+  static async batch<T, U>(
     allParameters: T[],
     mapper: TypedAsyncMapper<T, U>,
     batchSize: number,
+    progressCallback: (batchResponse: U[]) => unknown = voidFunction,
   ): Promise<U[]> {
     const copyParam = cloneDeep(allParameters);
     const finalResult = [];
@@ -54,6 +57,7 @@ export class AsyncUtils {
       // eslint-disable-next-line no-await-in-loop
       const batchResult = await Promise.all(params.map(mapper));
       finalResult.push(...batchResult);
+      progressCallback(batchResult);
     }
     return finalResult;
   }

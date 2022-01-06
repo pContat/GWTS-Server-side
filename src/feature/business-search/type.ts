@@ -7,15 +7,6 @@ export interface BuyableIngredient extends Ingredient {
   craftPrice?: number | CraftStatus;
 }
 
-export interface RecipeResult {
-  ingredients: BuyableIngredient[];
-  /** @description The buying price of the item*/
-  initialPrice: number;
-  /** @description The price after the buying all craft item craft*/
-  finalPrice: number;
-  itemId: number;
-}
-
 export interface DealCriteria {
   minFactoryMarge: number;
   minGain: number;
@@ -40,4 +31,29 @@ export enum CraftStatus {
 export enum BuyingStatus {
   /** * @description : if there is no sale listing for this item  */
   CANT_BUY = -1,
+}
+
+export interface Flip {
+  itemId: number;
+  buyPrice: number;
+  sellPrice: number;
+  gain: number;
+  gainRatio: number;
+  itemName: string;
+  chatLink: string;
+    /** * @description : define the chance of the item to be sold */
+  saleIndex : number
+}
+
+export interface RecipeResult {
+  /** @description List of ingredient to craft this item */
+  ingredients: BuyableIngredient[];
+  /** @description The buying price of the item */
+  buyPrice: number;
+  /** @description The price after the buying all craft item craft*/
+  craftPrice: number;
+  itemId: number;
+  gain: number;
+  gainRatio: number;
+  itemName: string;
 }

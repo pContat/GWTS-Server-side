@@ -27,7 +27,11 @@ export class CollectionUtils {
     // Put documents (docs) into a map where key is a document's ID or some
     // property (prop) of a document and value is a document.
     const docsMap = new Map();
-    docs.forEach((doc: any) => docsMap.set(doc[prop], doc));
+    docs.forEach((doc: any) => {
+      if(doc && doc[prop]){
+        docsMap.set(doc[prop], doc);
+      }
+    });
     // Loop through the keys and for each one retrieve proper document. For not
     // existing documents generate an error.
     return keys.map(key => {

@@ -103,7 +103,7 @@ export class ImportService {
     try {
       await this.recipeDao.bulkInsert(recipeList);
       await this.itemDao.bulkInsert(itemDocuments);
-      this.logger.log(
+      this.logger.debug(
         `saved recipe: ${recipeList.length}, saved item: ${itemDocuments.length}`,
       );
     } catch (err) {
@@ -143,6 +143,6 @@ export class ImportService {
   private async queuedCall(items: any[], functionToCall: AsyncFunction) {
     // create array of 200 parames
     const chunkedParam = chunk(items, this.padding);
-    return AsyncUtils.parallelBatch(chunkedParam, functionToCall, 5);
+    return AsyncUtils.batch(chunkedParam, functionToCall, 5);
   }
 }

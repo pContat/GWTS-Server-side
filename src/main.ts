@@ -32,22 +32,15 @@ async function bootstrap() {
   const importService = app.get(ImportService);
   if (await importService.requiredImport()) {
     appLogger.warn(
-      'empty database detected, process to import Guild Wars database',
+      'Empty database detected, process to import Guild Wars database',
     );
     await importService.importItems();
     appLogger.log(`import done`);
   }
 
   const dealService = app.get(DealFinder);
-  const fileStorage = app.get<FileStorageInterface>(apiStorage);
-  const deal = await dealService.findDeal();
-  await fileStorage.saveFile(
-    `./export_${new Date()}.json`,
-    Buffer.from(JSON.stringify(deal)),
-    {
-      isPublic: true,
-    },
-  );
+  await dealService.getTopDeal();
+
 }
 
 (async () => {

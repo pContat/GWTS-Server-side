@@ -3,8 +3,8 @@ import { DealCriteria } from '../type';
 export const defaultDealCriteria = {
   minFactoryMarge: 0.15, //min % of marge gain
   minGain: 10000, //Minimum of gain
-  minimumNumberOfSale: 50, //Minimum of item in sale
-  minimumNumberOfBuy: 50, //Minimum of item in buy
+  minimumNumberOfSale: 75, //Minimum of item in sale
+  minimumNumberOfBuy: 75, //Minimum of item in buy
   maxBuyPrice: -1, // (-1 : no limit)
   //Maximum of distinct compo to craft the object (-1 : no limit)
   maxCompo: -1,
