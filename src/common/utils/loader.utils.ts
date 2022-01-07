@@ -1,5 +1,5 @@
 import DataLoader from 'dataloader';
-import { first } from 'lodash';
+import { first, identity } from 'lodash';
 
 export function createRelationLoader<Tin, Tout>(
   loaderFunction: (keys: Tin[]) => Promise<Map<Tin, Tout>>,
@@ -16,27 +16,37 @@ export function createRelationLoader<Tin, Tout>(
   };
 }
 
-export function singleEntityToType<T, U>(entity: T, manyMapper: (input: T[]) => U[]) {
-    return first(manyMapper([entity]));
-  }
+export function singleEntityToType<T, U>(
+  entity: T,
+  manyMapper: (input: T[]) => U[],
+) {
+  return first(manyMapper([entity]));
+}
 
 // case : relation manyToMany
 export async function queryManyToMap<TEntity, TKey, TOut>(
   queryManyFunction: () => Promise<TEntity[]>,
-  keyMapper: (element: TEntity) => TKey,
-  valueMapper: (el: TEntity) => TOut,
+  keyMapper: (element: TEntity) => TKey = (el: any) => el.id,
+  valueMapper: (el: TEntity) => TOut = identity,
 ): Promise<Map<TKey, TOut>> {
   const databaseResponse = await queryManyFunction();
   const response = new Map();
-  databaseResponse.forEach(el => {
+  databaseResponse.forEach((el) => {
     response.set(keyMapper(el), valueMapper(el));
   });
   return response;
 }
 
-export function defaultQueryManyToMap<TEntity extends { id: number }, TOut>(
+export function defaultQueryManyToMap<
+  TEntity extends { id: number },
+  TOut = TEntity,
+>(
   queryManyFunction: () => Promise<TEntity[]>,
-  valueMapper: (el: TEntity) => TOut,
+  valueMapper: (el: TEntity) => TOut = identity,
 ) {
-  return queryManyToMap(queryManyFunction, element => element.id, valueMapper);
+  return queryManyToMap(
+    queryManyFunction,
+    (element) => element.id,
+    valueMapper,
+  );
 }

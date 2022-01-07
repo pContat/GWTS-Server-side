@@ -1,6 +1,6 @@
 import { DealCriteria } from '../type';
 
-export const defaultDealCriteria = {
+export const defaultDealCriteria: DealCriteria = {
   minFactoryMarge: 0.15, //min % of marge gain
   minGain: 10000, //Minimum of gain
   minimumNumberOfSale: 75, //Minimum of item in sale
@@ -8,7 +8,7 @@ export const defaultDealCriteria = {
   maxBuyPrice: -1, // (-1 : no limit)
   //Maximum of distinct compo to craft the object (-1 : no limit)
   maxCompo: -1,
-
+  minLevel: 60,
   doNotEvaluate: {
     rarity: ['Junk', 'Basic', 'Ascended', 'Legendary'],
     flags: ['AccountBound', 'NoSell', 'SoulbindOnAcquire'],
@@ -18,7 +18,7 @@ export const defaultDealCriteria = {
       23893, 23311, 23325, 23757, 23411, 23987, 30034, 45238, 67185, 67344,
     ],
   },
-} as DealCriteria;
+};
 
 // https://wiki.guildwars2.com/wiki/Crafting_Supplier
 // description contain : "can be purchased from master craftsmen"

@@ -6,10 +6,12 @@
 */
 
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { sumBy, take } from 'lodash';
+import { isNil, map, sumBy, take } from 'lodash';
 import { AsyncUtils, TimeUtils } from '../../../../common/utils';
+import { queryManyToMap } from '../../../../common/utils/loader.utils';
 import { FileStorageInterface } from '../../../../core/storage/file-storage.interface';
 import { apiStorage } from '../../../../core/storage/storage-provider';
+import { ItemModel } from '../../../item/model/item-model';
 import { ItemDao } from '../../../item/service/item.dao';
 import { defaultDealCriteria } from '../../conf/deal-criteria';
 import { DealCriteria, Flip, RecipeResult } from '../../type';
@@ -39,12 +41,12 @@ export class DealFinder {
     const start = TimeUtils.clock();
     const craftList: RecipeResult[] = [];
     const flipList: Flip[] = [];
-    // todo : change this to improve
+
     let totalEvaluated = 0;
     await AsyncUtils.batch(
       matchingCriteriaItem,
       async (item) => {
-        if (!(await this.doesMatchMinSellBuyRatio(item.id))) {
+        if (!(await this.doesMatchTradingPostCriteria(item))) {
           this.logger.debug(`item ${item.id}: no minimum buy/sale requirement`);
           return;
         }
@@ -88,15 +90,48 @@ export class DealFinder {
       },
     );
 
+    const buyPriceFilter = (el: RecipeResult | Flip) => {
+      if (this.configuration.maxBuyPrice <= 0) {
+        return true;
+      }
+      const isFlip = !isNil((<Flip>el).saleIndex);
+      return isFlip
+        ? el.buyPrice < this.configuration.maxBuyPrice
+        : (<RecipeResult>el).craftPrice < this.configuration.maxBuyPrice;
+    };
+
+    const compoFilter = (el: RecipeResult) => {
+      if (this.configuration.maxCompo <= 0) {
+        return true;
+      }
+      el.ingredients.length < this.configuration.maxCompo;
+    };
+
+    const ratioSort = (a: RecipeResult | Flip, b: RecipeResult | Flip) =>
+      b.gainRatio - a.gainRatio;
+
+    const topCraft = take(
+      allDeal.craft.sort(ratioSort).filter(buyPriceFilter).filter(compoFilter),
+      10,
+    );
+    const topFlip = take(
+      allDeal.flip.sort(ratioSort).filter(buyPriceFilter),
+      10,
+    );
+
+    // add name to ingredient
+    await AsyncUtils.asyncForEach(topCraft, async (craft) => {
+      const ingredientDetail: Map<number, ItemModel> = await queryManyToMap(
+        () => this.itemDao.findByIds(map(craft.ingredients, 'itemId')),
+      );
+      craft.ingredients.forEach((ingredient) => {
+        (<any>ingredient).name = ingredientDetail.get(ingredient.itemId).name;
+      });
+    });
+
     const sortedDeal = {
-      craft: take(
-        allDeal.craft.sort((a, b) => b.gainRatio - a.gainRatio),
-        10,
-      ),
-      flip: take(
-        allDeal.flip.sort((a, b) => b.gainRatio - a.gainRatio),
-        10,
-      ),
+      craft: topCraft,
+      flip: topFlip,
     };
     await this.fileStorage.saveFile(
       `./deal_${new Date().getTime()}.json`,
@@ -107,7 +142,7 @@ export class DealFinder {
     );
   }
 
-  async doesMatchMinSellBuyRatio(itemId: number) {
+  private async doesMatchMinSellBuyRatio(itemId: number) {
     const listing = await this.tradeListingService.getListing(itemId);
     const buyQuantity = sumBy(listing.buys, 'quantity');
     const sellQuantity = sumBy(listing.sells, 'quantity');
@@ -117,7 +152,16 @@ export class DealFinder {
     );
   }
 
-  async matchConfiguration() {
+  private async matchConfiguration() {
     return await this.itemDao.getMatchingCriteriaItem(this.configuration);
+  }
+
+  private async doesMatchTradingPostCriteria(item: ItemModel) {
+    if (!(await this.doesMatchMinSellBuyRatio(item.id))) {
+      this.logger.debug(`item ${item.id}: no minimum buy/sale requirement`);
+      return false;
+    }
+    // add other criteria if required
+    return true;
   }
 }

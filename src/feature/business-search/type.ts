@@ -13,6 +13,13 @@ export interface DealCriteria {
   minimumNumberOfSale: number;
   minimumNumberOfBuy: number;
   maxCompo: number;
+
+  /** @description Maximum amount to invest in one deal */
+  maxBuyPrice : number
+
+  minLevel : number
+
+
   doNotEvaluate: {
     rarity: string[];
     flags: string[];
