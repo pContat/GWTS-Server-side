@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { clone, first, isEmpty, isNil, map } from 'lodash';
 import { CacheService } from '../../../../core/cache/cache.service';
 import { ItemModel } from '../../../item/model/item-model';
+import { RecipeModel } from '../../../recipe/model/recipe-model';
 import { TreeNode } from '../../../recipe/type/tree-node';
 import { SearchableRecipeNode } from '../../searchable-recipe-node';
 import { BuyableIngredient, RecipeResult } from '../../type';
@@ -25,7 +26,9 @@ export class RecipeFinderService {
   ) {}
 
   /** @description Find the best recipe to craft the given item*/
-  async getRecipeCraftList(item: ItemModel): Promise<RecipeResult | undefined> {
+  async getRecipeCraftList(
+    item: ItemModel & { fromRecipe: RecipeModel },
+  ): Promise<RecipeResult | undefined> {
     if (!item.fromRecipe) {
       this.logger.debug(`item ${item.id}: can't craft it`);
       return undefined;
@@ -135,7 +138,13 @@ export class RecipeFinderService {
     const gain = (initialItemPrice - craftPrice) * 0.85; // we expect to sold it
     return {
       gainRatio: +((gain / craftPrice) * 100).toFixed(2),
-      itemName: item.name,
+      item: {
+        itemName: item.name,
+        itemLvl: item.level,
+      },
+      disciplines: item.fromRecipe.disciplines,
+      maxLvl: item.fromRecipe.minRating,
+      autoLearned: item.fromRecipe.autoLearned,
       gain: gain,
       craftPrice,
       buyPrice: initialItemPrice,

@@ -1,14 +1,21 @@
-import { DealCriteria } from '../type';
+import { DealCriteria, Discipline } from '../type';
 
 export const defaultDealCriteria: DealCriteria = {
-  minFactoryMarge: 0.15, //min % of marge gain
-  minGain: 10000, //Minimum of gain
-  minimumNumberOfSale: 75, //Minimum of item in sale
-  minimumNumberOfBuy: 75, //Minimum of item in buy
-  maxBuyPrice: -1, // (-1 : no limit)
-  //Maximum of distinct compo to craft the object (-1 : no limit)
-  maxCompo: -1,
-  minLevel: 60,
+  minGain: 10000,
+  minMarge: 0.15,
+  maxInvestmentPrice: -1,
+
+  minimumNumberOfSale: 75,
+  minimumNumberOfBuy: 75,
+
+  minItemLevel: 60,
+
+  craft: {
+    autoLearnedOnly: false,
+    maxCompo: -1,
+    allowedDisciplines: [{ discipline: Discipline.Armorsmith, maxLvl: 430 }],
+  },
+
   doNotEvaluate: {
     rarity: ['Junk', 'Basic', 'Ascended', 'Legendary'],
     flags: ['AccountBound', 'NoSell', 'SoulbindOnAcquire'],

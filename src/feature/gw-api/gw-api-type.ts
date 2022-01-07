@@ -1,3 +1,5 @@
+import { Discipline } from "../business-search/type";
+
 export namespace GuildWarsAPI {
   export interface Details {
     type: string;
@@ -40,7 +42,7 @@ export namespace GuildWarsAPI {
     output_item_count: number;
     min_rating: number;
     time_to_craft_ms: number;
-    disciplines: string[];
+    disciplines: Discipline[];
     flags: string[];
     ingredients: Ingredient[];
     id: number;

@@ -1,7 +1,8 @@
-import { TreeNode } from '../type/tree-node';
-import { BaseModel } from '../../../core/database/models/base.model';
-import { Ingredient } from '../../item/type/type';
 import { StringUtils } from '../../../common/utils';
+import { BaseModel } from '../../../core/database/models/base.model';
+import { Discipline } from '../../business-search/type';
+import { Ingredient } from '../../item/type/type';
+import { TreeNode } from '../type/tree-node';
 
 export class RecipeModel extends BaseModel {
   static tableName = 't_e_recipe';
@@ -24,10 +25,12 @@ export class RecipeModel extends BaseModel {
       }]*/
   outputItemId: number;
   ingredients: Ingredient[];
-  disciplines: string[];
+  disciplines: Discipline[];
   outputItemCount: number;
   type: string;
   chatLink: string;
+  minRating?: number;
+  autoLearned: boolean;
   // all the receipt to craft this object
   craftingTree: TreeNode<Ingredient>; // stored as json
 

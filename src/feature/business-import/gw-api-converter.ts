@@ -35,6 +35,8 @@ export function toRecipe(recipeDetail: RecipeDetail): Recipe {
     id: recipeDetail.id,
     chatLink: recipeDetail.chat_link,
     craftingTree: undefined,
+    minRating: recipeDetail.min_rating,
+    autoLearned: recipeDetail.flags.includes('AutoLearned'),
   };
 }
 

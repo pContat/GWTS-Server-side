@@ -8,17 +8,21 @@ export interface BuyableIngredient extends Ingredient {
 }
 
 export interface DealCriteria {
-  minFactoryMarge: number;
+  /** @description min % of marge gain : we do not want to gain 10 silver if it cost 100g  */
+  minMarge: number;
+  /** @description Minimum of gain  */
   minGain: number;
+  /** @description Maximum amount to invest in one deal : -1 no limit */
+  maxInvestmentPrice: number;
+
+  /** @description Allow to detect 'hot' item  */
   minimumNumberOfSale: number;
+  /** @description Allow to detect 'hot' item  */
   minimumNumberOfBuy: number;
-  maxCompo: number;
 
-  /** @description Maximum amount to invest in one deal */
-  maxBuyPrice : number
+  craft: CraftCriteria;
 
-  minLevel : number
-
+  minItemLevel: number;
 
   doNotEvaluate: {
     rarity: string[];
@@ -26,6 +30,15 @@ export interface DealCriteria {
     types: string[];
     itemBlacklist: number[];
   };
+}
+
+export interface CraftCriteria {
+  /** @description Filter the maximum of different compo required, -1 = no restriction */
+  maxCompo: number | -1;
+  /** @description Restrict craft to only auto recipe */
+  autoLearnedOnly: boolean;
+  /** @description Filter the maximum of different compo required, let empty for all */
+  allowedDisciplines: { discipline: Discipline; maxLvl: number }[];
 }
 
 export enum CraftStatus {
@@ -46,10 +59,13 @@ export interface Flip {
   sellPrice: number;
   gain: number;
   gainRatio: number;
-  itemName: string;
   chatLink: string;
-    /** * @description : define the chance of the item to be sold */
-  saleIndex : number
+  /** * @description : define the chance of the item to be sold */
+  saleIndex: number;
+  item: {
+    itemName: string;
+    itemLvl: number;
+  };
 }
 
 export interface RecipeResult {
@@ -62,5 +78,23 @@ export interface RecipeResult {
   itemId: number;
   gain: number;
   gainRatio: number;
-  itemName: string;
+  item: {
+    itemName: string;
+    itemLvl: number;
+  };
+  autoLearned: boolean;
+  disciplines: Discipline[];
+  maxLvl: number;
+}
+
+export enum Discipline {
+  Artificer = 'Artificer',
+  Armorsmith = 'Armorsmith',
+  Chef = 'Chef',
+  Huntsman = 'Huntsman',
+  Jeweler = 'Jeweler',
+  Leatherworker = 'Leatherworker',
+  Tailor = 'Tailor',
+  Weaponsmith = 'Weaponsmith',
+  Scribe = 'Scribe',
 }

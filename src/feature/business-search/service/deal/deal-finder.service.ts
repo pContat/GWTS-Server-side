@@ -6,22 +6,24 @@
 */
 
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { isNil, map, sumBy, take } from 'lodash';
+import { map, sumBy, take } from 'lodash';
 import { AsyncUtils, TimeUtils } from '../../../../common/utils';
 import { queryManyToMap } from '../../../../common/utils/loader.utils';
 import { FileStorageInterface } from '../../../../core/storage/file-storage.interface';
 import { apiStorage } from '../../../../core/storage/storage-provider';
 import { ItemModel } from '../../../item/model/item-model';
 import { ItemDao } from '../../../item/service/item.dao';
+import { RecipeModel } from '../../../recipe/model/recipe-model';
 import { defaultDealCriteria } from '../../conf/deal-criteria';
 import { DealCriteria, Flip, RecipeResult } from '../../type';
 import { RecipeFinderService } from '../recipe/recipe-finder.service';
 import { TradeListingService } from '../trade-listing/trade-listing.service';
+import { PostFilter } from './filter/post-filter';
 import { FlippingFinderService } from './flipping-finder.service';
 
 @Injectable()
 export class DealFinder {
-  private configuration: DealCriteria;
+  private dealCriteriaList: DealCriteria;
   logger = new Logger(DealFinder.name);
 
   constructor(
@@ -31,7 +33,7 @@ export class DealFinder {
     private readonly recipeFinder: RecipeFinderService,
     @Inject(apiStorage) private readonly fileStorage: FileStorageInterface,
   ) {
-    this.configuration = defaultDealCriteria;
+    this.dealCriteriaList = defaultDealCriteria;
   }
 
   async findDeal() {
@@ -70,14 +72,16 @@ export class DealFinder {
       },
     );
 
+    this.logger.log(`start post treatment`);
+    const response = this.postTreatmentFilter({
+      craft: craftList,
+      flip: flipList,
+    });
+
     const end = TimeUtils.clock(start);
     this.logger.log(`end process in ${end}`);
 
-    const content = {
-      craft: craftList,
-      flip: flipList,
-    };
-    return content;
+    return response;
   }
 
   async getTopDeal() {
@@ -90,35 +94,8 @@ export class DealFinder {
       },
     );
 
-    const buyPriceFilter = (el: RecipeResult | Flip) => {
-      if (this.configuration.maxBuyPrice <= 0) {
-        return true;
-      }
-      const isFlip = !isNil((<Flip>el).saleIndex);
-      return isFlip
-        ? el.buyPrice < this.configuration.maxBuyPrice
-        : (<RecipeResult>el).craftPrice < this.configuration.maxBuyPrice;
-    };
-
-    const compoFilter = (el: RecipeResult) => {
-      if (this.configuration.maxCompo <= 0) {
-        return true;
-      }
-      el.ingredients.length < this.configuration.maxCompo;
-    };
-
-    const ratioSort = (a: RecipeResult | Flip, b: RecipeResult | Flip) =>
-      b.gainRatio - a.gainRatio;
-
-    const topCraft = take(
-      allDeal.craft.sort(ratioSort).filter(buyPriceFilter).filter(compoFilter),
-      10,
-    );
-    const topFlip = take(
-      allDeal.flip.sort(ratioSort).filter(buyPriceFilter),
-      10,
-    );
-
+    const topCraft = take(allDeal.craftList, 10);
+    const topFlip = take(allDeal.flipList, 10);
     // add name to ingredient
     await AsyncUtils.asyncForEach(topCraft, async (craft) => {
       const ingredientDetail: Map<number, ItemModel> = await queryManyToMap(
@@ -147,13 +124,15 @@ export class DealFinder {
     const buyQuantity = sumBy(listing.buys, 'quantity');
     const sellQuantity = sumBy(listing.sells, 'quantity');
     return (
-      buyQuantity >= this.configuration.minimumNumberOfBuy &&
-      sellQuantity >= this.configuration.minimumNumberOfSale
+      buyQuantity >= this.dealCriteriaList.minimumNumberOfBuy &&
+      sellQuantity >= this.dealCriteriaList.minimumNumberOfSale
     );
   }
 
   private async matchConfiguration() {
-    return await this.itemDao.getMatchingCriteriaItem(this.configuration);
+    return (await this.itemDao.getMatchingCriteriaItem(
+      this.dealCriteriaList,
+    )) as (ItemModel & { fromRecipe: RecipeModel })[];
   }
 
   private async doesMatchTradingPostCriteria(item: ItemModel) {
@@ -163,5 +142,32 @@ export class DealFinder {
     }
     // add other criteria if required
     return true;
+  }
+
+  private postTreatmentFilter(allDeal: {
+    craft: RecipeResult[];
+    flip: Flip[];
+  }) {
+    const filterBuilder = new PostFilter(this.dealCriteriaList);
+
+    const ratioSort = (a: RecipeResult | Flip, b: RecipeResult | Flip) =>
+      b.gainRatio - a.gainRatio;
+
+    const filterCraft = allDeal.craft
+      .sort(ratioSort)
+      .filter(filterBuilder.buyPriceFilter)
+      .filter(filterBuilder.itemLvlFilter)
+      .filter(filterBuilder.compoFilter)
+      .filter(filterBuilder.disciplinesFilter);
+
+    const filterFlip = allDeal.flip
+      .sort(ratioSort)
+      .filter(filterBuilder.itemLvlFilter)
+      .filter(filterBuilder.buyPriceFilter);
+
+    return {
+      flipList: filterFlip,
+      craftList: filterCraft,
+    };
   }
 }

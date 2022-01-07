@@ -12,10 +12,7 @@ export class FlippingFinderService {
 
   constructor(private readonly tradeListingService: TradeListingService) {}
 
-  async shouldFlipItem(item: ItemModel): Promise<
-    Flip
-    | undefined
-  > {
+  async shouldFlipItem(item: ItemModel): Promise<Flip | undefined> {
     const listing = await this.tradeListingService.getListing(item.id);
 
     const buyPrice = first(listing.buys).unit_price;
@@ -33,13 +30,16 @@ export class FlippingFinderService {
       return;
     }
     return {
-      gainRatio : +((possibleGainIfFlipping / buyPrice) * 100).toFixed(2),
-      saleIndex : +((sellQuantity / buyQuantity) * 100).toFixed(2),
+      gainRatio: +((possibleGainIfFlipping / buyPrice) * 100).toFixed(2),
+      saleIndex: +((sellQuantity / buyQuantity) * 100).toFixed(2),
       gain: possibleGainIfFlipping,
       buyPrice: buyPrice,
       sellPrice: sellPrice,
       itemId: item.id,
-      itemName: item.name,
+      item: {
+        itemName: item.name,
+        itemLvl: item.level,
+      },
       chatLink: item.chatLink,
     };
   }
